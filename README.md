@@ -1,6 +1,6 @@
 # Nico Battle
 
-Un juego del profe Nico.
+Un juego de Nico Games.
 
 Juego educativo multijugador para clase: vale para cualquier módulo (las preguntas salen de un Excel).
 

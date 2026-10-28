@@ -82,7 +82,7 @@
     dos.appendChild(panel("Rey fantasma", "Vida quitada a los vivos siendo fantasma", r.fantasma, miId, true, "Solo cuenta la vida quitada a jugadores vivos · un fantasma no puede dar el golpe final"));
     cont.appendChild(dos);
     var firma = el("div", "firma"), logo = el("img"); logo.src = "img/logo_nico.png?v=13"; logo.alt = "Logo de Nico";
-    firma.appendChild(logo); firma.appendChild(document.createTextNode("Nico Battle · un juego del profe Nico")); cont.appendChild(firma);
+    firma.appendChild(logo); firma.appendChild(document.createTextNode("Nico Battle · un juego de Nico Games")); cont.appendChild(firma);
   }
 
   window.Final = { calcular: calcular, pintar: pintar };
