@@ -5,6 +5,8 @@
   "use strict";
   var T = Mapa.T, VW = 15, VH = 10, ANCHO = VW * T, ALTO = VH * T;
   var PASO_MS = 250, RADIO = 4, VIDA_MAX = 30;
+  // tiempos de movimiento (ms): por acierto, por ejercicio grande, para huir tras quitar vida y del objeto reloj
+  var TIEMPO = { pregunta: 30000, ejercicio: 90000, huidaDebil: 30000, huidaFuerte: 45000, reloj: 30000 };
   var VENTAJA = { fuego: "planta", planta: "tierra", tierra: "agua", agua: "fuego" };
   var DIRS = { arriba: [0, -1], abajo: [0, 1], izquierda: [-1, 0], derecha: [1, 0] };
   var TECLAS = { ArrowUp: "arriba", KeyW: "arriba", ArrowDown: "abajo", KeyS: "abajo", ArrowLeft: "izquierda", KeyA: "izquierda", ArrowRight: "derecha", KeyD: "derecha" };
@@ -29,8 +31,8 @@
     '<div class="casilla" id="casPotenciador"><canvas id="icoPotenciador" width="52" height="52" style="width:26px;height:26px"></canvas>Ataque x2</div>' +
     '<button id="botonPregunta" disabled>Pregunta corta</button></div>' +
     '<div id="pruebas" class="oculto"><button id="botonPruebas">Herramientas de prueba</button><div id="pruebasMenu" class="oculto">' +
-    '<button data-prueba="debil">Darme 10 s + ataque débil</button><button data-prueba="fuerte">Darme 30 s + ataque fuerte</button>' +
-    '<button data-prueba="fuerte2">Darme 30 s + ataque fuerte x2 (premio de cálculo)</button><button data-prueba="ejercicio">Lanzar ya el siguiente ejercicio grande</button>' +
+    '<button data-prueba="debil">Darme 30 s + ataque débil</button><button data-prueba="fuerte">Darme 90 s + ataque fuerte</button>' +
+    '<button data-prueba="fuerte2">Darme 90 s + ataque fuerte x2 (premio de cálculo)</button><button data-prueba="ejercicio">Lanzar ya el siguiente ejercicio grande</button>' +
     '<button data-prueba="golpe">Recibir un golpe (−5 de vida)</button><button data-prueba="cero">Quedarme sin vida (probar fantasma)</button>' +
     '<button data-prueba="objetos">Añadir 6 objetos al mapa</button><button data-prueba="menu">Volver a elegir personaje</button>' +
     '<div class="nota">Los muñecos tienen 30 de vida, se mueven un poco y reaparecen a los 5 s de caer.</div></div></div>';
@@ -251,7 +253,7 @@
       if (o.tipo === "vida") { red.combatePropio(function (c) { c.vida = Math.min(VIDA_MAX, c.vida + 5); return c; }); msg = "¡Vida +5!"; }
       else if (o.tipo === "escudo") { red.combatePropio(function (c) { c.escudo = true; return c; }); msg = "¡Escudo puesto! Parará el siguiente ataque"; }
       else if (o.tipo === "potenciador") { j.potenciador = true; msg = "¡Potenciador! Tu siguiente ataque hará x2"; }
-      else if (o.tipo === "reloj") { if (j.tiempoHasta > red.ahora()) j.tiempoHasta += 10000; msg = "¡+10 segundos!"; }
+      else if (o.tipo === "reloj") { if (j.tiempoHasta > red.ahora()) j.tiempoHasta += TIEMPO.reloj; msg = "¡+" + TIEMPO.reloj / 1000 + " segundos!"; }
       else { j.capaHasta = red.ahora() + 60000; msg = "¡Capa! Eres invisible durante 1 minuto"; }
       guardar();
       aviso(msg);
@@ -292,9 +294,11 @@
     P.fase = "resultado"; P.acierto = bien;
     Sonido.tocar(bien ? "acierto" : "fallo");
     $("resultado").className = bien ? "bien" : "mal";
-    $("resultadoTitulo").textContent = bien ? "¡Correcto! +10 s" : "Incorrecto. La respuesta era " + "ABCDEF".charAt(pr.correcta);
-    $("resultadoExplicacion").textContent = pr.q.explicacion;
-    P.autoSeguir = red.ahora() + (bien ? 8000 : 12000);
+    $("resultadoTitulo").textContent = bien ? "¡Correcto! +" + TIEMPO.pregunta / 1000 + " s" : "Incorrecto. La respuesta era " + "ABCDEF".charAt(pr.correcta);
+    // si acierta: verde un momento y a moverse, sin pulsar nada; si falla: explicación y botón para seguir
+    $("resultadoExplicacion").textContent = bien ? "" : pr.q.explicacion;
+    $("botonSeguir").classList.toggle("oculto", bien);
+    P.autoSeguir = red.ahora() + (bien ? 1000 : 12000);
     red.anotarRespuesta(pr.q.n, bien);
     actualizarBotonSeguir(red.ahora());
   }
@@ -305,7 +309,7 @@
   }
   function seguir() {
     if (!P || P.fase !== "resultado") return;
-    if (P.acierto) darTiempo(10000, "debil"); else siguientePregunta();
+    if (P.acierto) darTiempo(TIEMPO.pregunta, "debil"); else siguientePregunta();
   }
   function darTiempo(ms, ataque) {
     var j = P.jugador;
@@ -351,7 +355,7 @@
     P.ejAbierto = ej;
     $("ejTitulo").textContent = ej.conversion ? "Ejercicio de conversión en fantasma" : "¡Ejercicio para toda la clase! · " + (ej.titulo || "");
     $("ejAviso").textContent = ej.conversion ? "Has quedado eliminado. Resuelve el ejercicio para volver como fantasma (no se puede saltar)."
-      : ej.tipo === "calculo" ? "Haz los cálculos en papel o con calculadora. Premio: 30 s + ataque fuerte x2." : "Premio: 30 s + ataque fuerte.";
+      : ej.tipo === "calculo" ? "Haz los cálculos en papel o con calculadora. Premio: " + TIEMPO.ejercicio / 1000 + " s + ataque fuerte x2." : "Premio: " + TIEMPO.ejercicio / 1000 + " s + ataque fuerte.";
     $("ejEnunciado").innerHTML = formatear(ej.enunciado);
     $("ejFormato").innerHTML = ej.tipo === "teorico" && ej.ejemplo ? "Ejemplo de formato (<b>solo es un ejemplo</b>, no la respuesta): <i>" + Comun.escapar(ej.ejemplo) + "</i>" : "";
     var c = $("ejCampos"); c.innerHTML = "";
@@ -395,8 +399,8 @@
       if (ej.conversion) { mensajeEj("¡Correcto! Convirtiéndote en fantasma…", "bien"); $("botonComprobar").disabled = true; return; }
       P.ejCerrado = ej.id;
       cerrarEjercicio();
-      darTiempo(30000, ej.tipo === "calculo" ? "fuerte2" : "fuerte");
-      aviso(ej.tipo === "calculo" ? "¡Correcto! +30 s y ataque fuerte x2" : "¡Correcto! +30 s y ataque fuerte");
+      darTiempo(TIEMPO.ejercicio, ej.tipo === "calculo" ? "fuerte2" : "fuerte");
+      aviso("¡Correcto! +" + TIEMPO.ejercicio / 1000 + " s y ataque fuerte" + (ej.tipo === "calculo" ? " x2" : ""));
     });
   }
   function mensajeEj(txt, clase) { $("ejMensaje").textContent = txt; $("ejMensaje").className = clase; }
@@ -559,8 +563,9 @@
       if (r.real > 0) {
         var s = {}; s[fantasma ? "vidaQuitadaFantasma" : "vidaQuitada"] = r.real; red.sumar(s);
         if (at.tiempoHasta > red.ahora()) {
-          at.tiempoHasta += tipo === "debil" ? 10000 : 30000; guardar();
-          aviso("¡Le has quitado vida! +" + (tipo === "debil" ? 10 : 30) + " s para huir");
+          var extra = tipo === "debil" ? TIEMPO.huidaDebil : TIEMPO.huidaFuerte;
+          at.tiempoHasta += extra; guardar();
+          aviso("¡Le has quitado vida! +" + extra / 1000 + " s para huir");
         }
       } else if (r.bloqueado) aviso("¡Su escudo ha parado tu ataque!");
       else if (fantasma) aviso("Un fantasma no puede dar el golpe final");
@@ -817,7 +822,7 @@
     var j = P.jugador, que = b.getAttribute("data-prueba");
     if (que === "debil" || que === "fuerte" || que === "fuerte2") {
       if (P.ejAbierto || P.eliminado) aviso("Primero resuelve el ejercicio");
-      else darTiempo(que === "debil" ? 10000 : 30000, que);
+      else darTiempo(que === "debil" ? TIEMPO.pregunta : TIEMPO.ejercicio, que);
     } else if (que === "golpe" || que === "cero") {
       if (esFantasma(j)) aviso("Los fantasmas no reciben daño");
       else if (que === "golpe" && j.escudo) { aviso("Tu escudo ha parado el golpe"); Sonido.tocar("bloqueado"); }

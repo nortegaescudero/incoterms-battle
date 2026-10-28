@@ -240,3 +240,10 @@ td.fantasma { color: #cbb8ff; }
 #pruebasMenu button { border: 0; border-radius: 8px; padding: 7px 10px; background: #eef0f6; color: #2c3150; font-weight: 600; text-align: left; }
 #pruebasMenu button:hover { background: #dfe6f7; }
 #pruebasMenu .nota { color: #8a807c; font-size: 12px; max-width: 230px; }
+
+/* título del juego y firma de Nico */
+.titulo-juego { display: block; width: 100%; max-width: 520px; margin: 0 auto 10px; }
+.titulo-juego.izquierda { margin: 0 0 10px; max-width: 420px; }
+.firma { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 22px; color: #8a807c; font-weight: 700; font-size: 15px; }
+.firma img { width: 44px; height: 44px; }
+.pantalla.oscura .firma { color: #9aa2cc; }

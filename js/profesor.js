@@ -360,7 +360,7 @@
       return base.update({ estado: "fin", fin: Comun.TS(), resultados: res, ejercicio: null, eventos: null });
     }).catch(function () { terminando = false; });
   }
-  $("botonTerminar").onclick = function () { if (confirm("¿Terminar la partida para todos?")) terminar("profesor"); };
+  $("botonTerminar").onclick = function () { if (confirm("¿Terminar la partida ahora?" + String.fromCharCode(10, 10) + "Se acaba para todos y salen los resultados con los puntos que lleva cada uno en este momento.")) terminar("profesor"); };
   $("botonNueva").onclick = function () { terminando = false; mostrar("pCrear"); comprobar(); };
 
   function pantallaFinal() {

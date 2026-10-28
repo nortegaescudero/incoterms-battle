@@ -1,6 +1,8 @@
-# Incoterms Battle
+# Nico Battle
 
-Juego educativo multijugador para clase (FP de Comercio y Marketing).
+Un juego del profe Nico.
+
+Juego educativo multijugador para clase: vale para cualquier módulo (las preguntas salen de un Excel).
 
 - **Alumnos:** https://nortegaescudero.github.io/incoterms-battle/
 - **Profesor:** https://nortegaescudero.github.io/incoterms-battle/profesor.html
