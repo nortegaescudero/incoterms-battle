@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Incoterms Battle · Profesor</title>
+<link rel="stylesheet" href="css/estilo.css?v=9">
+</head>
+<body class="profesor">
+
+<div id="pCrear" class="pantalla">
+  <div class="caja">
+    <h1>Incoterms Battle · Profesor</h1>
+    <p class="sub">Crea una partida y comparte el código con la clase</p>
+    <div class="paso">
+      <h2><span>1</span>Excel del módulo</h2>
+      <input type="file" id="archivo" accept=".xlsx,.xls" class="oculto">
+      <button class="boton" id="botonExcel">Elegir Excel…</button>
+      <div id="resumenExcel" class="resumen"></div>
+    </div>
+    <div class="paso">
+      <h2><span>2</span>Ajustes</h2>
+      <label class="campo en-linea">Duración máxima (minutos)<input type="number" id="duracion" value="50" min="5" max="180"></label>
+      <label class="campo en-linea">Objetos al empezar<input type="number" id="objetosIniciales" value="12" min="0" max="18"></label>
+    </div>
+    <div class="paso">
+      <h2><span>3</span>Calendario de ejercicios para toda la clase</h2>
+      <p class="nota">Viene de la hoja «Calendario» del Excel. Puedes cambiar los minutos, el ejercicio y el tiempo mínimo antes de poder saltarlo.</p>
+      <table class="tabla-cal">
+        <thead><tr><th>Minuto</th><th>Ejercicio</th><th>Se puede saltar a los (min)</th><th></th></tr></thead>
+        <tbody id="tablaCalendario"></tbody>
+      </table>
+      <div class="botones-cal"><button class="boton gris" id="botonAnadirEj">+ Añadir ejercicio</button><button class="boton gris" id="botonRestaurarCal">Volver al del Excel</button></div>
+      <label class="campo en-linea ancho-sel">Ejercicio para volver como fantasma<select id="selConversion"></select></label>
+    </div>
+    <button class="boton verde" id="botonCrear" disabled>Crear partida</button>
+    <div id="errorCrear" class="error"></div>
+  </div>
+</div>
+
+<div id="pSala" class="pantalla oculto">
+  <div class="caja ancha">
+    <div class="cabecera-sala">
+      <div>
+        <p class="sub">Entrad en <b id="enlaceAlumnos"></b> y escribid el código:</p>
+        <div class="codigo-grande" id="codigoGrande"></div>
+      </div>
+      <div class="acciones">
+        <button class="boton verde grande" id="botonComenzar" disabled>Comenzar</button>
+        <button class="boton gris" id="botonCancelar">Borrar partida</button>
+      </div>
+    </div>
+    <div class="paso">
+      <h2>Alumnos en la sala: <span id="salaCuantos">0</span></h2>
+      <div class="lista-sala" id="salaLista"></div>
+    </div>
+  </div>
+</div>
+
+<div id="pPanel" class="pantalla oscura oculto">
+  <div class="caja ancha">
+    <div class="cabecera-panel">
+      <div><div class="etiqueta">Tiempo</div><div class="reloj-grande" id="relojPartida">0:00</div></div>
+      <div><div class="etiqueta" id="proximoTitulo">Próximo ejercicio</div><div class="reloj-grande" id="proximoEj">—</div></div>
+      <div><div class="etiqueta">Vivos</div><div class="reloj-grande" id="vivosPanel">0</div></div>
+      <div><div class="etiqueta">Fantasmas</div><div class="reloj-grande lila" id="fantasmasPanel">0</div></div>
+      <div><div class="etiqueta">Código</div><div class="reloj-grande blanco" id="codigoPanel"></div></div>
+      <div class="acciones fila">
+        <button class="boton" id="botonPausa">Pausar</button>
+        <button class="boton" id="botonLanzar">Lanzar ya el siguiente ejercicio</button>
+        <button class="boton rojo" id="botonTerminar">Terminar partida</button>
+      </div>
+    </div>
+    <div id="cajaEjercicio" class="caja-ej oculto">
+      <div><b id="ejActualNombre"></b> · <span id="ejActualResueltos"></span></div>
+      <button class="boton gris" id="botonSolucion">Ver solución (no lo proyectes)</button>
+      <div id="solucion" class="solucion oculto"></div>
+    </div>
+    <div class="panel-dos">
+      <table class="tabla-alumnos">
+        <thead><tr><th></th><th>Alumno</th><th>Vida</th><th>Estado</th><th>Bajas</th><th>Aciertos</th><th>Fallos</th><th>Ejercicio</th></tr></thead>
+        <tbody id="tablaAlumnos"></tbody>
+      </table>
+      <div class="rankings">
+        <div class="ranking"><h3>Combate (bajas)</h3><ol id="rankCombate"></ol></div>
+        <div class="ranking lila"><h3>Rey fantasma</h3><ol id="rankFantasma"></ol></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="pFin" class="pantalla oculto">
+  <div class="final" id="finalCont"></div>
+  <div class="acciones-final">
+    <button class="boton verde" id="botonDescargar">Descargar resultados (Excel)</button>
+    <button class="boton" id="botonNueva">Crear otra partida</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="js/config_firebase.js?v=9"></script>
+<script src="img/sprites_datos.js?v=9"></script>
+<script src="js/excel.js?v=9"></script>
+<script src="js/mapa.js?v=9"></script>
+<script src="js/sprites.js?v=9"></script>
+<script src="js/comun.js?v=9"></script>
+<script src="js/sonido.js?v=9"></script>
+<script src="js/correccion.js?v=9"></script>
+<script src="js/final.js?v=9"></script>
+<script src="js/profesor.js?v=9"></script>
+</body>
+</html>
