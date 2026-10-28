@@ -31,6 +31,7 @@
     cargarBanco(b);
   });
   $("enlaceAlumnos").textContent = location.href.replace(/profesor\.html.*$/, "");
+  Mapa.LISTA.forEach(function (m) { var o = document.createElement("option"); o.value = m.id; o.textContent = m.nombre; $("selMapa").appendChild(o); });
 
   function opcionesEjercicio() {
     var ops = [];
@@ -77,7 +78,7 @@
       // A los alumnos solo les llega lo que necesitan: nunca las soluciones de los ejercicios grandes.
       return con.db.ref("partidas/" + codigo).set({
         creador: con.uid, estado: "espera", creada: Comun.TS(),
-        config: { duracionMax: +$("duracion").value || 50, objetosIniciales: Math.min(MAX_OBJETOS, +$("objetosIniciales").value || 0), conversion: nConv || null },
+        config: { duracionMax: +$("duracion").value || 50, objetosIniciales: Math.min(MAX_OBJETOS, +$("objetosIniciales").value || 0), conversion: nConv || null, mapa: $("selMapa").value },
         banco: { cortas: banco.cortas }, calendario: cal, siguienteEj: 0,
         conversion: conv ? Comun.ejercicioSinSolucion("calculo", conv) : null
       });
@@ -106,6 +107,7 @@
     $("codigoGrande").textContent = codigo; $("codigoPanel").textContent = codigo;
     base.child("config").once("value").then(function (s) {
       partida.config = s.val() || {};
+      Mapa.usar(partida.config.mapa);
       escuchar(base.child("jugadores"), "value", function (s2) { jugadores = s2.val() || {}; pintar(); });
       escuchar(base.child("combate"), "value", function (s2) { combate = s2.val() || {}; pintar(); });
       escuchar(base.child("objetos"), "value", function (s2) { objetos = s2.val() || {}; });

@@ -145,6 +145,9 @@
       yo.child("x").on("value", mirar);
     });
     conPosicion.then(function () {
+      return base.child("config/mapa").once("value");
+    }).then(function (sm) {
+      Mapa.usar(sm.val());
       return Promise.all([base.child("banco").once("value"), base.child("conversion").once("value"), yo.once("value"), base.child("jugadores").once("value"), base.child("combate/" + id).once("value")]);
     }).then(function (r) {
       var banco = r[0].val(), conversion = r[1].val(), propio = r[2].val() || {};

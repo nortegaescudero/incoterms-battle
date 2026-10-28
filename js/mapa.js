@@ -1,11 +1,13 @@
-// Mapa de 40 x 30 casillas y su dibujo (mismo estilo que sprites/mapa3f.py).
+// Mapas de 40 x 30 casillas y su dibujo (mismo estilo que sprites/mapa3f.py).
+// Hay varios mapas («campo», «arnedo»); Mapa.usar(id) elige con cuál se juega.
 (function () {
   "use strict";
   var T = 64, MW = 40, MH = 30;
 
   // T árbol · P pino · R roca · B/b roca grande (2x2) · U arbusto · W estanque
   // H meseta · S escalera · : camino · g hierba alta · . césped
-  var FILAS = [
+  // (los del mapa de ciudad están en js/ciudad.js)
+  var CAMPO = [
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT",
     "TTTTTT.TT.T...TTTTP.TTTTTTT.TTTTT..TTTTT",
@@ -38,11 +40,73 @@
     "TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT"
   ];
   // Puntos de aparición, repartidos y separados entre sí.
-  var SALIDAS = [[7, 5], [18, 4], [28, 4], [34, 8], [4, 10], [14, 13], [27, 12], [35, 16], [3, 18], [15, 21], [26, 24], [34, 19], [9, 26], [29, 27]];
+  // Arnedo (La Rioja): zona del IES Celso Díaz, girada para que el Paseo de la Constitución
+  // y la carretera Soria-Tafalla (avenida de los Reyes Católicos) queden horizontales.
+  var ARNEDO = [
+    "XXXXXXEEEEEEEAEEEEEEEEAEEEEEAEEEEEEAEEEE",
+    "XXXXXXEEEEEEEAEEEEEEEEAEEEEEAEEEEEEAEEEE",
+    "XXXXXaEEEEEEEAEEEEEEEEAEEEEEAEEEEEEAEEEE",
+    "XXXXXaaaaaaaaAaaaaaaaaAaaaaaAaaaaaaAaaaa",
+    "AAAAAAAAAzAAAzAAAAzAAAzAAAAAAAzAAAAzAAAA",
+    "AAAAAAAAAzAAAzAAAAzAAAzAAAAAAAzAAAAzAAAA",
+    "aaaaaaaaaAaaaaaaaaAaaaaaaaaaaaAaaaaAaaaa",
+    "....T....AIIIIIIIIATqqqqTfffffAEEEEAEEEE",
+    ".CCC.ppU.AIIIIIIIIAqqFqqqfffffAEEEEAEEEE",
+    ".CCC.....AIIIIIIIIAqqqqqqfffffAqqqqAEEEE",
+    "........TAkkkkkqqqAEEEEEUfffffAEEEEAqqqq",
+    ".CCC.CCC.AkkkkkqqqAEEEEEqEEEEEAEEEEAEEEE",
+    ".CCCUCCC.AkkkkkqqqAEEEEEqEEEEEAEEEEAEEEE",
+    "T.g......AAAAAAAAAAAAAAAAAAAAAAAAAAA....",
+    "..gg.....ACCC.CCC.AGGGGEEEEEE.AEEEEAEEEE",
+    ".CCC.pp.TACCC.CCCTAGGGGEEEEEE.AEEEEAEEEE",
+    ".CCC.....A........AkkkkEEEEEE.AEEEEAEEEE",
+    ".....CCC.ACCCC.T..Akkkk..gg...AEEEEAEEEE",
+    ".T.U.CCC.ACCCC..U.A...U.TggT..A..K.A.K..",
+    "aaaaaaaaaAaaaaaaaaAaaaaaaaaaaaAaaaaAaaaa",
+    "AAAAAAAAAzAAAAAAAAzAAAAAzAAAAAAAAAAzAAAA",
+    "AAAAAAAAAzAAAAAAAAzAAAAAzAAAAAAAAAAzAAAA",
+    "aaaaaaaaa:aaaaaaaaaaaaaaAaaaaaaaaaaAaaaa",
+    "CCCTCCCC.:.OOOOOOO.aKaKaAZZZZZ.....Aqqqq",
+    "CCC.CCCC.:TOOOOOOO.aaaaaAZZZZZ.T...Aqppp",
+    ".gggggggT:.kkkkkkk.aKaaaAZZZZZ...T.Aqppp",
+    ".ggggggg.:.kkkkkkk.TaaaaAZZZZZU....Aqqqq",
+    ":::::gg:::::::::::::::::::::gg::::::::::",
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+  ];
+  var MAPAS = {
+    campo: { nombre: "Campo y bosque", filas: CAMPO,
+      salidas: [[7, 5], [18, 4], [28, 4], [34, 8], [4, 10], [14, 13], [27, 12], [35, 16], [3, 18], [15, 21], [26, 24], [34, 19], [9, 26], [29, 27]] },
+    arnedo: { nombre: "Arnedo · IES Celso Díaz", filas: ARNEDO,
+      salidas: [[2, 7], [7, 10], [12, 11], [16, 11], [22, 8], [27, 9], [33, 9], [37, 13], [2, 17], [15, 16], [21, 18], [32, 25], [37, 23], [14, 27]],
+      carteles: [
+        { t: "IES CELSO DÍAZ", x: 14, y: 9.62, tipo: "fachada" },
+        { t: "COLEGIO SAGRADO CORAZÓN", x: 14.5, y: 24.62, tipo: "fachada" },
+        { t: "GUARDERÍA", x: 21, y: 15.62, tipo: "fachada" },
+        { t: "Paseo de la Constitución", x: 17.5, y: 2.55, tipo: "calle" },
+        { t: "Av. Reyes Católicos", x: 26, y: 16.55, tipo: "calle" },
+        { t: "C/ Ángel Beriáin", x: 16.5, y: 12.6, tipo: "calle" },
+        { t: "C/ Ciudad de Elba", x: 4.5, y: 13.5, tipo: "calle" },
+        { t: "Plaza Orenzana", x: 22, y: 9.55, tipo: "suelo" },
+        { t: "PLAZA DE TOROS", x: 27.5, y: 26.7, tipo: "fachada" },
+        { t: "PISCINAS", x: 38, y: 23.45, tipo: "suelo" },
+        { t: "Vía Verde del Cidacos", x: 16, y: 27.5, tipo: "suelo" },
+        { t: "Río Cidacos", x: 30, y: 28.9, tipo: "agua" },
+        { t: "Cerro de arcilla", x: 2.5, y: 2.3, tipo: "suelo" }
+      ] }
+  };
+  var actual = "campo", FILAS = CAMPO, SALIDAS = MAPAS.campo.salidas;
+  function usar(id) {
+    if (!MAPAS[id]) id = "campo";
+    actual = id; FILAS = MAPAS[id].filas; SALIDAS = MAPAS[id].salidas;
+    if (window.Mapa) window.Mapa.SALIDAS = SALIDAS;
+    return id;
+  }
 
   function c(x, y) { return (x < 0 || y < 0 || x >= MW || y >= MH) ? "T" : FILAS[y].charAt(x); }
-  function esSolido(x, y) { return "TPRUBb".indexOf(c(x, y)) >= 0; }
-  function esAgua(x, y) { return c(x, y) === "W"; }
+  function esSolido(x, y) { return "TPRUBbECIOGZKXF".indexOf(c(x, y)) >= 0; }
+  function esAgua(x, y) { var k = c(x, y); return k === "W" || k === "p"; }   // el estanque o río y las piscinas
+  function esRio(x, y) { return c(x, y) === "W"; }
   function esMeseta(x, y) { return c(x, y) === "H"; }
   function esHierbaAlta(x, y) { return c(x, y) === "g"; }
   function esCamino(x, y) { var k = c(x, y); return k === ":" || k === "S"; }
@@ -133,18 +197,20 @@
       }
     }
     // estanques: borde de arena, agua y agua profunda
-    function agua(x, y) { return function (dx, dy) { return esAgua(x + dx, y + dy); }; }
+    function agua(x, y) { return function (dx, dy) { return esRio(x + dx, y + dy); }; }
     [["rgb(214,190,130)", 0, 6, 22], ["rgb(84,156,226)", 0, 0, 22], ["rgb(66,136,210)", 12, 0, 16]].forEach(function (capa) {
       g.fillStyle = capa[0];
-      for (y = 0; y < MH; y++) for (x = 0; x < MW; x++) if (esAgua(x, y)) {
+      for (y = 0; y < MH; y++) for (x = 0; x < MW; x++) if (esRio(x, y)) {
         g.save(); g.translate(0, capa[2]); casillaRedonda(g, x * T, y * T, capa[1], capa[3], agua(x, y)); g.restore();
       }
     });
-    for (y = 0; y < MH; y++) for (x = 0; x < MW; x++) if (esAgua(x, y)) {
+    for (y = 0; y < MH; y++) for (x = 0; x < MW; x++) if (esRio(x, y)) {
       var q2 = rnd(); X = x * T; Y = y * T;
       if (q2 < 0.45) { g.strokeStyle = "rgb(180,220,250)"; g.lineWidth = 3; g.beginPath(); g.ellipse(X + 20 + rnd() * 24, Y + 20 + rnd() * 24, 14, 6, 0, Math.PI * 1.11, Math.PI * 1.89); g.stroke(); }
       else if (q2 < 0.6) { elipse(g, X + 16, Y + 26, X + 48, Y + 42, "rgb(70,160,80)"); poli(g, [[X + 32, Y + 34], [X + 48, Y + 30], [X + 48, Y + 38]], "rgb(66,136,210)"); }
     }
+    // calles, edificios, piscinas… (solo en los mapas de ciudad)
+    if (window.Ciudad) Ciudad.pintar(g, { c: c, T: T, MW: MW, MH: MH, rnd: rnd, carteles: MAPAS[actual].carteles || [] });
     // mesetas: cara del bancal, escalera y bordes
     for (y = 0; y < MH; y++) for (x = 0; x < MW; x++) if (esMeseta(x, y)) {
       X = x * T; Y = y * T;
@@ -232,7 +298,9 @@
     var w = MW * MS + 12, h = MH * MS + 12, L = lienzo(w, h, res), g = L.g;
     g.fillStyle = "rgba(24,28,50,0.9)"; g.fillRect(0, 0, w, h);
     var col = { "T": "rgb(40,110,55)", "P": "rgb(40,110,55)", "R": "rgb(140,144,156)", "B": "rgb(140,144,156)", "b": "rgb(140,144,156)", "U": "rgb(52,128,60)",
-      "W": "rgb(84,156,226)", "H": "rgb(160,215,120)", "S": "rgb(222,196,140)", ":": "rgb(222,196,140)", "g": "rgb(80,150,70)", ".": "rgb(120,188,95)" };
+      "W": "rgb(84,156,226)", "H": "rgb(160,215,120)", "A": "rgb(90,94,104)", "z": "rgb(90,94,104)", "a": "rgb(200,196,188)", "q": "rgb(226,208,170)",
+      "k": "rgb(78,128,190)", "f": "rgb(90,170,80)", "E": "rgb(176,92,70)", "C": "rgb(205,90,66)", "I": "rgb(176,96,70)", "O": "rgb(236,214,150)", "G": "rgb(232,130,110)",
+      "Z": "rgb(210,170,120)", "K": "rgb(200,196,188)", "F": "rgb(226,208,170)", "X": "rgb(196,104,64)", "p": "rgb(90,190,235)", "S": "rgb(222,196,140)", ":": "rgb(222,196,140)", "g": "rgb(80,150,70)", ".": "rgb(120,188,95)" };
     for (var y = 0; y < MH; y++) for (var x = 0; x < MW; x++) { g.fillStyle = col[c(x, y)]; g.fillRect(6 + x * MS, 6 + y * MS, MS, MS); }
     return L.cv;
   }
@@ -266,7 +334,8 @@
   }
 
   window.Mapa = {
-    casillaLibre: casillaLibre, salidaLibre: salidaLibre,
+    casillaLibre: casillaLibre, salidaLibre: salidaLibre, usar: usar, actual: function () { return actual; },
+    LISTA: Object.keys(MAPAS).map(function (k) { return { id: k, nombre: MAPAS[k].nombre }; }),
     T: T, MW: MW, MH: MH, MS: MS, SALIDAS: SALIDAS, celda: c,
     esSolido: esSolido, esAgua: esAgua, esMeseta: esMeseta, esHierbaAlta: esHierbaAlta,
     puedePisar: puedePisar, frenaAtaque: frenaAtaque,

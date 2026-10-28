@@ -7,7 +7,7 @@
   var DIRS = { arriba: [0, -1], abajo: [0, 1], izquierda: [-1, 0], derecha: [1, 0] };
 
   // ---------- adaptador local: hace de «red» guardándolo todo en memoria ----------
-  function AdaptadorLocal(corregir) {
+  function AdaptadorLocal(corregir, sitios) {
     var m = null, munecos = [], combate = {}, objetos = {}, idObj = 0, temporizador = null, yo = "yo";
     var self = this;
     this.ahora = function () { return Date.now(); };
@@ -16,7 +16,7 @@
       combate[yo] = { vida: VIDA_MAX, escudo: false };
       m.ponerCombate(yo, combate[yo]);
       var pjs = Object.keys(Sprites.PERSONAJES);
-      [[13, 18], [19, 12], [22, 15], [10, 14], [24, 9], [35, 16], [26, 24]].forEach(function (s, i) {
+      sitios.forEach(function (s, i) {
         var mu = { id: "m" + i, pj: pjs[i % 4], nombre: "Muñeco " + (i + 1), x: s[0], y: s[1], casa: s, dir: "abajo", proximo: Date.now() + 1000 + Math.random() * 3000, muertoHasta: 0 };
         munecos.push(mu);
         combate[mu.id] = { vida: VIDA_MAX, escudo: i === 1 };
@@ -108,6 +108,20 @@
   banco = Comun.bancoGuardado();
   if (banco) { mostrarResumen(); $("botonExcel").textContent = "Cambiar Excel…"; }
 
+  Mapa.LISTA.forEach(function (m) { var o = document.createElement("option"); o.value = m.id; o.textContent = m.nombre; $("selMapa").appendChild(o); });
+
+  // Dónde empieza el jugador y dónde se ponen los muñecos (algunos cerca, para practicar enseguida).
+  function posiciones() {
+    if (Mapa.actual() === "campo") return { yo: [16, 15], munecos: [[13, 18], [19, 12], [22, 15], [10, 14], [24, 9], [35, 16], [26, 24]] };
+    var yo = Mapa.SALIDAS[3], ocup = [yo], munecos = [];
+    for (var i = 0; i < 4000 && munecos.length < 7; i++) {
+      var c = Mapa.casillaLibre(ocup); if (!c) break;
+      var d = Math.abs(c[0] - yo[0]) + Math.abs(c[1] - yo[1]);
+      if (d >= 3 && d <= (munecos.length < 4 ? 7 : 20)) { munecos.push(c); ocup.push(c); }
+    }
+    return { yo: yo, munecos: munecos };
+  }
+
   Sprites.cargar(function () {
     Comun.tarjetasPersonaje($("personajes"), function (pj) { pjElegido = pj; comprobar(); });
     Motor.preparar();
@@ -118,6 +132,8 @@
   var reloj = null;
   $("botonJugar").onclick = function () {
     $("menu").classList.add("oculto");
+    Mapa.usar($("selMapa").value);
+    var pos = posiciones();
     var inicio = Date.now(), cal = Comun.calendarioDefecto(banco), sig = 0, lanzados = {};
     var nConv = Comun.numeroConversion(banco), conv = nConv !== null ? Comun.buscarEjercicio(banco, "calculo", nConv) : null;
     function tiempo() { return Date.now() - inicio; }
@@ -125,7 +141,7 @@
       if (id === "conv") return !!conv && Correccion.corregir("calculo", conv, valores);
       var l = lanzados[id]; return !!l && Correccion.corregir(l.tipo, l.ex, valores);
     }
-    var red = new AdaptadorLocal(corregir);
+    var red = new AdaptadorLocal(corregir, pos.munecos);
     function lanzar() {
       while (sig < cal.length) {
         var c = cal[sig], ex = Comun.buscarEjercicio(banco, c.tipo, c.numero), id = "e" + sig;
@@ -139,7 +155,7 @@
       Motor.calendario(cal, sig);
     }
     Motor.iniciar({
-      id: "yo", pj: pjElegido, nombre: "Tú", banco: banco, pruebas: true, propio: { x: 16, y: 15 },
+      id: "yo", pj: pjElegido, nombre: "Tú", banco: banco, pruebas: true, propio: { x: pos.yo[0], y: pos.yo[1] },
       conversion: conv ? Comun.ejercicioSinSolucion("calculo", conv) : null,
       tiempoJuego: tiempo,
       alPrueba: function (que) { if (que === "ejercicio") lanzar(); else if (que === "objetos") red.anadirObjetos(6); },

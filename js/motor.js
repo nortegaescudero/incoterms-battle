@@ -52,7 +52,7 @@
     var j = document.createElement("div"); j.id = "juego"; j.className = "oculto"; j.innerHTML = HTML;
     document.body.appendChild(j);
     var lienzo = $("lienzo"); lienzo.width = ANCHO * res; lienzo.height = ALTO * res; g = lienzo.getContext("2d");
-    recursos = { suelo: Mapa.pintarSuelo(resSuelo), obst: Mapa.pintarObstaculos(res), mini: Mapa.pintarMinimapa(res) };
+    pintarMapa();
     ["icoEscudo", "icoPotenciador"].forEach(function (id, i) { var cv = $(id); Sprites.icono(cv.getContext("2d"), i ? "potenciador" : "escudo", 0, 0, cv.width); });
     var lg = $("luna").getContext("2d"), k = $("luna").width / 56; lg.scale(k, k);
     Mapa.elipse(lg, 0, 0, 56, 56, "rgb(250,235,160)"); Mapa.elipse(lg, 16, -6, 66, 48, "#1c203a");
@@ -80,6 +80,11 @@
     window.addEventListener("blur", function () { if (P) P.teclas = []; });
   }
 
+  function pintarMapa() {
+    var obst = recursos ? recursos.obst : Mapa.pintarObstaculos(res);
+    recursos = { mapa: Mapa.actual(), suelo: Mapa.pintarSuelo(resSuelo), obst: obst, mini: Mapa.pintarMinimapa(res) };
+  }
+
   function pintarCara(cv, pj, fondo) {
     var c = cv.getContext("2d"), w = cv.width;
     c.clearRect(0, 0, w, w); c.save();
@@ -105,6 +110,7 @@
   // op: { id, pj, nombre, banco, propio:{...}, conversion, tiempoJuego(), pausa, pruebas, alSalir, alPrueba }
   function iniciar(opciones, adaptador) {
     preparar();
+    if (recursos.mapa !== Mapa.actual()) pintarMapa();
     op = opciones; red = adaptador;
     var pr = op.propio || {};
     var j = crearPersonaje(op.id, op.pj, op.nombre, pr.x, pr.y);
