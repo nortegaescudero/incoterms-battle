@@ -172,7 +172,7 @@
       if (d.conectado !== undefined) o.conectado = d.conectado;
       if (typeof d.x === "number" && typeof d.y === "number" && (d.x !== o.x || d.y !== o.y)) {
         var vecino = o.x !== undefined && Math.abs(d.x - o.x) + Math.abs(d.y - o.y) === 1;
-        o.paso = vecino ? { x: o.x, y: o.y, t0: ahora } : null;
+        o.paso = vecino ? { x: o.x, y: o.y, t0: ahora, dur: duracionPaso(o, d.x, d.y) } : null;
         if (vecino) o.pasos++;
         o.x = d.x; o.y = d.y;
       }
@@ -456,7 +456,7 @@
   // ---------- movimiento ----------
   function posPx(c, ahora) {
     if (c.paso) {
-      var t = Math.min(1, (ahora - c.paso.t0) / PASO_MS);
+      var t = Math.min(1, (ahora - c.paso.t0) / (c.paso.dur || PASO_MS));
       return { x: (c.paso.x + (c.x - c.paso.x) * t) * T, y: (c.paso.y + (c.y - c.paso.y) * t) * T };
     }
     return { x: c.x * T, y: c.y * T };
@@ -468,16 +468,19 @@
     // los fantasmas flotan sobre el estanque y atraviesan a los demás; a los vivos no se les puede pisar
     var bloqueado = !Mapa.puedePisar(c.x, c.y, nx, ny, fantasma) ||
       (!fantasma && Object.values(P.otros).concat([P.jugador]).some(function (o) { return o !== c && estaVivo(o) && o.x === nx && o.y === ny; }));
-    if (!bloqueado) { c.paso = { x: c.x, y: c.y, t0: ahora }; c.x = nx; c.y = ny; c.pasos++; }
+    if (!bloqueado) { c.paso = { x: c.x, y: c.y, t0: ahora, dur: duracionPaso(c, nx, ny) }; c.x = nx; c.y = ny; c.pasos++; }
     if (c === P.jugador && (giro || !bloqueado)) red.publicarPosicion({ x: c.x, y: c.y, dir: c.dir });
     return !bloqueado;
   }
+  function duracionPaso(c, x, y) { return !esFantasma(c) && Mapa.esBarro && Mapa.esBarro(x, y) ? PASO_MS * 2 : PASO_MS; }
+  // radio de visión: la niebla del pantano lo baja para todos por igual
+  function radioVision() { return window.Peligros && Peligros.hay() ? Peligros.radio(tiempoJuego(), RADIO) : RADIO; }
   function puedeMoverse(j, ahora) { return j.tiempoHasta > ahora && !P.eliminado && !P.ejAbierto && !P.pausa; }
 
   function actualizar(ahora) {
     var j = P.jugador;
     [j].concat(Object.values(P.otros)).forEach(function (c) {
-      if (c.paso && ahora - c.paso.t0 >= PASO_MS) { c.paso = null; if (c === j) recoger(j); }
+      if (c.paso && ahora - c.paso.t0 >= (c.paso.dur || PASO_MS)) { c.paso = null; if (c === j) recoger(j); }
       if (c.expr && ahora > c.exprHasta) c.expr = null;
     });
     if (!P.pausa) {
@@ -500,14 +503,42 @@
       if (ve && !o.visible) { o.popHasta = ahora + 450; var pp = posPx(o, ahora); efecto({ k: "pop", x: pp.x + 32, y: pp.y - 30, dur: 700 }, ahora); Sonido.tocar("pop", 0.7); }
       o.visible = ve;
     });
+    if (!P.pausa && window.Peligros && Peligros.hay()) {
+      var nb = Peligros.niebla(tiempoJuego());
+      if (nb.aviso && ahora > (P.avisoNiebla || 0)) { P.avisoNiebla = ahora + 10000; aviso("¡Llega la niebla! Durante un rato todos veréis menos"); }
+      peligroPropio(ahora);
+    }
     P.efectos = P.efectos.filter(function (e) { return ahora < e.t0 + e.dur; });
+  }
+
+  // Peligros del mapa (puerto y volcán): solo hacen daño a quien tiene tiempo de movimiento, nunca eliminan,
+  // el escudo para un golpe, los fantasmas no reciben daño y tras un golpe hay 2 s sin daño.
+  function peligroPropio(ahora) {
+    var j = P.jugador;
+    if (!estaVivo(j) || j.x === undefined || !puedeMoverse(j, ahora)) return;
+    var t = tiempoJuego();
+    if (Peligros.avisoEn(j.x, j.y, t) && ahora > (P.avisoPeligro || 0)) { P.avisoPeligro = ahora + 3500; aviso("¡Cuidado! ¡Apártate de ahí!"); Sonido.tocar("tiempoFin", 0.6); }
+    if (ahora < (P.inmuneHasta || 0)) return;
+    var p = Peligros.dano(j.x, j.y, t); if (!p) return;
+    P.inmuneHasta = ahora + 2000;
+    var bloqueado = !!j.escudo, real = bloqueado ? 0 : Math.max(0, Math.min(p.dano, j.vida - 1));
+    red.combatePropio(function (c) {
+      if (c.escudo) c.escudo = false; else c.vida = Math.max(Math.min(c.vida, 1), c.vida - p.dano);
+      return c;
+    });
+    var ev = { tipo: "golpe", de: j.id, a: j.id, dano: bloqueado ? p.dano : real, bloqueado: bloqueado, peligro: p.tipo };
+    dibujarGolpe(ev, ahora);
+    red.publicarEvento(ev);
+    j.expr = "herido"; j.exprHasta = ahora + 600;
+    Sonido.tocar(bloqueado ? "bloqueado" : "herido");
+    aviso(bloqueado ? "Tu escudo te ha protegido del peligro" : Peligros.TEXTOS[p.tipo] + (real < p.dano ? " (te queda 1 de vida)" : ""));
   }
 
   function esVisible(o, ahora) {
     var j = P.jugador;
     if (!(estaVivo(o) || esFantasma(o)) || o.x === undefined || o.capaHasta > ahora) return false;
     if (j.x === undefined) return false;
-    var radio = Mapa.esHierbaAlta(o.x, o.y) ? RADIO / 2 : RADIO;
+    var r = radioVision(), radio = Mapa.esHierbaAlta(o.x, o.y) ? r / 2 : r;
     return Math.hypot(o.x - j.x, o.y - j.y) <= radio + 0.01;
   }
 
@@ -640,8 +671,10 @@
     g.drawImage(recursos.suelo, cam.x * resSuelo, cam.y * resSuelo, ANCHO * resSuelo, ALTO * resSuelo, 0, 0, ANCHO, ALTO);
     g.save();
     g.translate(-Math.round(cam.x), -Math.round(cam.y));
-    var jx = pj.x + 32, jy = pj.y + 32, rad = T * (RADIO + 0.3);
+    var jx = pj.x + 32, jy = pj.y + 32, rad = T * (radioVision() + 0.3);
     g.fillStyle = "rgba(255,245,205,0.2)"; g.beginPath(); g.arc(jx, jy, rad, 0, Math.PI * 2); g.fill();
+    var hayPeligros = window.Peligros && Peligros.hay(), tj = hayPeligros ? tiempoJuego() : 0;
+    if (hayPeligros) Peligros.dibujarSuelo(g, tj, T, ahora);
 
     // todo lo que tiene altura se ordena por filas (lo de abajo tapa a lo de arriba)
     var lista = [], x0 = Math.floor(cam.x / T) - 2, x1 = x0 + VW + 4, y0 = Math.floor(cam.y / T) - 1, y1 = y0 + VH + 4;
@@ -653,12 +686,24 @@
     // los fantasmas flotan: se dibujan encima de lo de su fila
     Object.values(P.otros).forEach(function (o) { if (o.visible) { var op2 = posPx(o, ahora); lista.push({ orden: op2.y + T, capa: esFantasma(o) ? 3 : 2, pj: o, pos: op2 }); } });
     if (estaVivo(j) || esFantasma(j)) lista.push({ orden: pj.y + T, capa: esFantasma(j) ? 3 : 2, pj: j, pos: pj });
+    if (hayPeligros) Peligros.carretillas(tj).forEach(function (c) { lista.push({ orden: (c.y + 1) * T + 2, capa: 2, carr: c }); });
+    if (hayPeligros) Peligros.plantas().forEach(function (q) {
+      // la planta abre la boca si tiene al lado a alguien vivo que se ve
+      var cerca = [j].concat(Object.values(P.otros)).some(function (o) { return estaVivo(o) && (o === j || o.visible) && Math.abs(o.x - q.x) + Math.abs(o.y - q.y) === 1; });
+      if (cerca) q.estado = "muerde";
+      lista.push({ orden: (q.y + 1) * T, capa: 1, planta: q });
+    });
     lista.sort(function (a, b) { return a.orden - b.orden || a.capa - b.capa; });
     lista.forEach(function (e) {
       if (e.sp) g.drawImage(e.sp.cv, e.x + e.sp.ox, e.y + e.sp.oy, e.sp.w, e.sp.h);
       else if (e.obj) dibujarObjeto(e.obj, ahora);
+      else if (e.carr) Peligros.dibujarCarretilla(g, e.carr, T, ahora);
+      else if (e.planta) Peligros.dibujarPlanta(g, e.planta, T, ahora);
       else dibujarPersonaje(e.pj, e.pos, ahora);
     });
+    // la niebla tapa el paisaje, pero nunca los avisos de los peligros
+    if (hayPeligros) Peligros.dibujarNiebla(g, tj, cam, jx, jy, rad, ANCHO, ALTO, ahora);
+    if (hayPeligros) Peligros.dibujarEncima(g, tj, T, ahora);
 
     g.strokeStyle = "rgb(255,232,150)"; g.lineWidth = 3; g.setLineDash([rad * Math.PI * 2 / 56, rad * Math.PI * 2 / 56]);
     g.beginPath(); g.arc(jx, jy, rad, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);

@@ -74,6 +74,105 @@
     "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
     "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
   ];
+  // Puerto de mercancías: m muelle · M mar · J contenedores · Y buque · N almacén · r zona de grúa · V palés
+  var PUERTO = [
+    "NNNNNNNNNVNNNNNNNNNVNNNNNNNNNVNNNNNNNNNN",
+    "NNNNNNNNNmNNNNNNNNNmNNNNNNNNNmNNNNNNNNNN",
+    "NNNNNNNNNmNNNNNNNNNmNNNNNNNNNmNNNNNNNNNN",
+    "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",
+    "AAAzAAAAAAAAzAAAAAAAAAAAAAzAAAAAAAAAzAAA",
+    "AAAzAAAAAAAAzAAAAAAAAAAAAAzAAAAAAAAAzAAA",
+    "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",
+    "..mmmJJJJJJmmmJJJJJmJJJJJmmmJJJJJJJmmEEE",
+    "T.mmmJJJJJJmmmJJJJJmJJJJJmmmJJJJJJJmmEEE",
+    "..mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmEEE",
+    "ggmmmmmmVmmmmmmmmmmmmmmmmmmmmmmmmmmmmEEE",
+    "ggmmmJJJJJJmmmJJJJmVmJJJJmmmJJJJJJJmmEEE",
+    "ggmmmJJJJJJmmmJJJJmmmJJJJmmmJJJJJJJmmmmm",
+    "ggmmmJJJJJJmmmJJJJmmVJJJJmmmJJJJJJJmmaaa",
+    ".TmmmmmmmmmmmmmmVmmmmmmmmmmmmmmmmmmmmaKa",
+    "..mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmaaa",
+    "ggmmmmmmmmmmmmmmmmmmmmmmmmmmmmmVmmmmmaKa",
+    "ggmmmJJJJJJmmmJJJJJmJJJJJmmmJJJJJJJmmaaa",
+    "ggmmmJJJJJJmmmJJJJJmJJJJJmmmJJJJJJJmmaKa",
+    "ggmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmaaa",
+    ".UmmmrrrmmmmmmmmmrrrmmmmmmmmmrrrmmmmmaKa",
+    "T.mmmrrrmmmmmmmmmrrrmmmmmmmmmrrrmmmmmaaa",
+    "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm",
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+    "MMMMMMMYYYYYYYYYYYYYYYYYYYYYYYYYMMMMMMMM",
+    "MMMMMMMYYYYYYYYYYYYYYYYYYYYYYYYYMMMMMMMM",
+    "MMMMMMMYYYYYYYYYYYYYYYYYYYYYYYYYMMMMMMMM",
+    "MMMMMMMYYYYYYYYYYYYYYYYYYYYYYYYYMMMMMMMM",
+    "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+  ];
+  // Isla Volcán: n ceniza · e arena · L lava · D basalto · v volcán · x géiser · Q palmera
+  var VOLCAN = [
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWeeeWWeeWWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWeeeeee..eee.eeeeeWWWWWWWWWWW",
+    "WWWWWWWWWWWWennvvvvvvvvvvnneeWWWWWWWWWWW",
+    "WWWWWWWWeeeeennvvvvvvvvvvnneeeWWWWWWWWWW",
+    "WWWWWWWe.....nnvvvvvvvvvvnn...eeeeWWWWWW",
+    "WWWWeeeQ.....nnvvvvvvvvvvDn....Q.eeWWWWW",
+    "WWWWeWee...T.nDvvvvvvvvvvnn.T.eeeeWWWWWW",
+    "WWWeeQe......nnvvvvvvvvvvnn.......eWWWWW",
+    "WWee.....Q...nnvvvvvvvvvvnn.....x..eeeeW",
+    "WWWe..U......nnnnnnLLnnnnnn.......QeeeeW",
+    "WWWeee..T...xnnnnnnLLnnnnnnx..ggggeeeeWW",
+    "WWe.Q........nnnnnnLLnnnnnn...gggg.eeeeW",
+    "eee..gggg...U.....xnn.x......U........eW",
+    "WWe..gggg..........LL............T.eeeeW",
+    "WWWeD.....x........LL.....ggg......eeeeW",
+    "WWe...LLLLnLLLLnLLLLL.....ggg...D...eeeW",
+    "WWe...LLLLnLLLLnLLLLL.....ggg.......e.eW",
+    "WWWe.U.........x...LLL...x.........QeeWW",
+    "WWWeeee..T...........LLLLnLLLLnLLLeeeeWW",
+    "WWee.................LLLLnLLLLnLLL.eeeeW",
+    "WWWeeeQ......T................x...eDeeWW",
+    "WWWWeWWex........x............eeeeWWWWWW",
+    "WWWWWWWe....gggg....D....U.T..eeeeWWWWWW",
+    "WWWWWWWD....gggg..U.....x.....eeeeWWWWWW",
+    "WWWWWWWWeeeQe............ee..QWWeWWWWWWW",
+    "WWWWWWWWWWWWeeeeQe.eeeQeeeWeeWWWWWWWWWWW",
+    "WWWWWWWWWWWWeeeeee.eeeeeeWWeeWWWWWWWWWWW",
+    "WWWWWWWWWWWWWeeWWeeeeWeeeWWWWWWWWWWWWWWW",
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"
+  ];
+  // Pantano: s suelo · o barro (más lento) · w agua · d pasarela · t árbol seco · c planta carnívora · g juncos
+  var PANTANO = [
+    "TttTttTttTttTttTttTttTttTttTttTttTttTttt",
+    "tTssTtssTtssTtssTtssTtssTtssTtssTtssTttT",
+    "tTssssssssssssssssssssstssssssstsssssstT",
+    "Tsssstsssssssstsoooooosssssdssssggggtsst",
+    "tsssssssoooossssoooooosssssdssssggggsssT",
+    "tTgggsssoooossssoooooosscswdwsssggggsstT",
+    "TTgggssssssssssssssssssswwwdwwRssssssstt",
+    "tsgggssRscwwwwwssUsssssswwwdwwwssssscssT",
+    "tsgggssswwwwwwwwwsssssswwwwdwwwwsssssssT",
+    "TTsscsswwwwwwwwwwwsstsswwwwdwwwwsssgggtt",
+    "tTsssdddddddddddddddsssswwwdwUwssssgggtT",
+    "tsstssswwwwwwwwwwwsssscstswdssssstsgggsT",
+    "Tssssssswwwwwwwwwssssssssssdssscssssssst",
+    "tTssssUssstwwwwcssRsssooooodssoooooosstT",
+    "tTsoooooosssssggggssssooooosssoooooosstT",
+    "Tssoooooosssssggggscssooooosssoooooostst",
+    "tssoooooossstsssssssdsooooosggggsssssssT",
+    "tTsssssggggsssssssssdsssssssggggssscsstT",
+    "TTssscsggggsssUssswwdwwssstsssssssRssstt",
+    "tssssssssssssswwtwwwdwwwwwsssssswwsssssT",
+    "tssstsssssssswwwwwwwdwwwwwwwssswwwwwsssT",
+    "TTssswwssssdddddddddddddddddddwwwwwwwstt",
+    "tTsswwwwwsssswwwwwwwdwwwwwwwssswwwwwsstT",
+    "tssswwwwwsssscswwwwwdwwwwwwscssUwwwssssT",
+    "TssswwwwwsssssssUswwdwwssRssssssssssssst",
+    "tTsssswwsssoooooosssdssssssssooooooststT",
+    "tTsRsssssscoooooosssdssggggssoooooossstT",
+    "Tssssssstssoooooosstsssggggssooocoosssst",
+    "tssssssssssssssssssssssssssssssssssssssT",
+    "tTTtTTtTTtTTtTTtTTtTTtTTtTTtTTtTTtTTtTtT"
+  ];
   var MAPAS = {
     campo: { nombre: "Campo y bosque", filas: CAMPO,
       salidas: [[7, 5], [18, 4], [28, 4], [34, 8], [4, 10], [14, 13], [27, 12], [35, 16], [3, 18], [15, 21], [26, 24], [34, 19], [9, 26], [29, 27]] },
@@ -93,7 +192,28 @@
         { t: "Vía Verde del Cidacos", x: 16, y: 27.5, tipo: "suelo" },
         { t: "Río Cidacos", x: 30, y: 28.9, tipo: "agua" },
         { t: "Cerro de arcilla", x: 2.5, y: 2.3, tipo: "suelo" }
-      ] }
+      ] },
+    puerto: { nombre: "Puerto de mercancías (con peligros)", filas: PUERTO,
+      salidas: [[2, 7], [11, 10], [19, 7], [25, 10], [35, 7], [2, 22], [13, 14], [27, 14], [35, 13], [9, 20], [21, 22], [33, 22], [19, 16], [6, 6]],
+      carteles: [
+        { t: "ALMACÉN 1", x: 4, y: 2.62, tipo: "fachada" }, { t: "ALMACÉN 2", x: 14, y: 2.62, tipo: "fachada" },
+        { t: "ALMACÉN 3", x: 24, y: 2.62, tipo: "fachada" }, { t: "ALMACÉN 4", x: 34.5, y: 2.62, tipo: "fachada" },
+        { t: "OFICINAS", x: 38, y: 11.62, tipo: "fachada" },
+        { t: "GRÚA", x: 6, y: 21.5, tipo: "suelo" }, { t: "GRÚA", x: 18, y: 21.5, tipo: "suelo" }, { t: "GRÚA", x: 30, y: 21.5, tipo: "suelo" }
+      ],
+      // carretillas (recorren estas rutas sin parar) y grúas (dejan caer un contenedor cada cierto tiempo)
+      peligros: { carretillas: [{ ruta: [[3, 9], [36, 9], [36, 15], [3, 15]], vel: 2, fase: 0 }, { ruta: [[3, 9], [36, 9], [36, 15], [3, 15]], vel: 2, fase: 0.5 },
+                               { ruta: [[12, 6], [26, 6], [26, 19], [12, 19]], vel: 2, fase: 0.2 }, { ruta: [[2, 19], [36, 19], [36, 22], [2, 22]], vel: 2, fase: 0.6 }],
+                  gruas: [{ x: 5, y: 20, w: 3, h: 2, fase: 0 }, { x: 17, y: 20, w: 3, h: 2, fase: 7000 }, { x: 29, y: 20, w: 3, h: 2, fase: 14000 }] } },
+    volcan: { nombre: "Isla Volcán (con peligros)", filas: VOLCAN, oculto: true,   // preparado, pero aún no sale en el menú
+      salidas: [[8, 4], [28, 6], [5, 10], [34, 8], [3, 14], [36, 14], [6, 19], [11, 19], [17, 21], [23, 22], [28, 26], [12, 27], [33, 22], [22, 15]],
+      carteles: [],
+      peligros: { geiseres: "x" } },
+    pantano: { nombre: "Pantano encantado (con peligros)", filas: PANTANO,
+      salidas: [[3, 3], [11, 2], [20, 7], [34, 2], [5, 12], [18, 11], [33, 8], [3, 17], [23, 17], [37, 13], [6, 26], [9, 20], [27, 28], [37, 27]],
+      carteles: [],
+      // plantas carnívoras que muerden a su alrededor y niebla que baja la visión de todos
+      peligros: { plantas: "c", niebla: { periodo: 60000, dura: 15000, fase: 20000 } } }
   };
   var actual = "campo", FILAS = CAMPO, SALIDAS = MAPAS.campo.salidas;
   function usar(id) {
@@ -104,11 +224,21 @@
   }
 
   function c(x, y) { return (x < 0 || y < 0 || x >= MW || y >= MH) ? "T" : FILAS[y].charAt(x); }
-  function esSolido(x, y) { return "TPRUBbECIOGZKXF".indexOf(c(x, y)) >= 0; }
-  function esAgua(x, y) { var k = c(x, y); return k === "W" || k === "p"; }   // el estanque o río y las piscinas
+  function peligros() {
+    var d = MAPAS[actual].peligros; if (!d) return null;
+    var out = { carretillas: d.carretillas || [], gruas: d.gruas || [], geiseres: [], plantas: [], niebla: d.niebla || null };
+    for (var y = 0; y < MH; y++) for (var x = 0; x < MW; x++) {
+      if (d.geiseres && c(x, y) === d.geiseres) out.geiseres.push({ x: x, y: y, fase: (x * 7919 + y * 104729) % 12000 });
+      if (d.plantas && c(x, y) === d.plantas) out.plantas.push({ x: x, y: y, fase: (x * 7919 + y * 104729) % 8000 });
+    }
+    return out;
+  }
+  function esSolido(x, y) { return "TPRUBbECIOGZKXFJYNVDvQtc".indexOf(c(x, y)) >= 0; }
+  function esAgua(x, y) { var k = c(x, y); return k === "W" || k === "p" || k === "M" || k === "L" || k === "w"; }   // agua y lava: solo las cruzan los fantasmas
   function esRio(x, y) { return c(x, y) === "W"; }
   function esMeseta(x, y) { return c(x, y) === "H"; }
   function esHierbaAlta(x, y) { return c(x, y) === "g"; }
+  function esBarro(x, y) { return c(x, y) === "o"; }   // en el barro los pasos tardan el doble
   function esCamino(x, y) { var k = c(x, y); return k === ":" || k === "S"; }
 
   // ¿Pasar de a a b cruza el borde de una meseta sin usar la escalera?
@@ -210,7 +340,7 @@
       else if (q2 < 0.6) { elipse(g, X + 16, Y + 26, X + 48, Y + 42, "rgb(70,160,80)"); poli(g, [[X + 32, Y + 34], [X + 48, Y + 30], [X + 48, Y + 38]], "rgb(66,136,210)"); }
     }
     // calles, edificios, piscinas… (solo en los mapas de ciudad)
-    if (window.Ciudad) Ciudad.pintar(g, { c: c, T: T, MW: MW, MH: MH, rnd: rnd, carteles: MAPAS[actual].carteles || [] });
+    if (window.Ciudad) Ciudad.pintar(g, { c: c, T: T, MW: MW, MH: MH, rnd: rnd, carteles: MAPAS[actual].carteles || [], peligros: peligros() });
     // mesetas: cara del bancal, escalera y bordes
     for (y = 0; y < MH; y++) for (x = 0; x < MW; x++) if (esMeseta(x, y)) {
       X = x * T; Y = y * T;
@@ -234,7 +364,7 @@
     g.fillStyle = "rgba(20,50,20,0.27)";
     for (y = 0; y < MH; y++) for (x = 0; x < MW; x++) {
       var k2 = c(x, y), X2 = x * T, Y2 = y * T, sh = null;
-      if (k2 === "T") sh = [X2 + 34, Y2 + 56, 30, 9]; else if (k2 === "P") sh = [X2 + 34, Y2 + 58, 26, 8];
+      if (k2 === "T" || k2 === "Q" || k2 === "t") sh = [X2 + 34, Y2 + 56, 30, 9]; else if (k2 === "P") sh = [X2 + 34, Y2 + 58, 26, 8];
       else if (k2 === "R") sh = [X2 + 36, Y2 + 56, 28, 8]; else if (k2 === "U") sh = [X2 + 32, Y2 + 54, 28, 7];
       else if (k2 === "B") sh = [X2 + 70, Y2 + 118, 62, 12];
       if (sh) { g.beginPath(); g.ellipse(sh[0], sh[1], sh[2], sh[3], 0, 0, Math.PI * 2); g.fill(); }
@@ -282,6 +412,35 @@
       });
       [[24, 40], [40, 34], [32, 20]].forEach(function (b) { elipse(g, X + b[0] - 3, Y + b[1] - 3, X + b[0] + 3, Y + b[1] + 3, "rgb(220,60,70)"); });
     });
+    nuevo("Q", 96, 110, -16, -46, function (g, X, Y) {
+      var cx = X + 32;
+      g.strokeStyle = "rgb(140,100,60)"; g.lineWidth = 10; g.lineCap = "round";
+      g.beginPath(); g.moveTo(cx - 4, Y + 58); g.quadraticCurveTo(cx + 12, Y + 20, cx + 4, Y - 14); g.stroke();
+      g.strokeStyle = "rgb(110,78,46)"; g.lineWidth = 2;
+      for (var k = 0; k < 6; k++) { var yy = Y + 52 - k * 11; g.beginPath(); g.moveTo(cx - 6 + k, yy); g.lineTo(cx + 6 + k, yy - 2); g.stroke(); }
+      [[-40, -30], [40, -26], [-30, -6], [32, -2], [0, -46], [-14, -40], [16, -42]].forEach(function (h, i) {
+        g.fillStyle = i % 2 ? "rgb(60,150,70)" : "rgb(46,124,58)";
+        g.beginPath(); g.ellipse(cx + 4 + h[0] / 2, Y - 14 + h[1] / 2 + 8, 26, 9, Math.atan2(h[1], h[0]), 0, Math.PI * 2); g.fill();
+      });
+      elipse(g, cx - 2, Y - 14, cx + 8, Y - 4, "rgb(120,80,40)"); elipse(g, cx + 6, Y - 12, cx + 16, Y - 2, "rgb(120,80,40)");
+    });
+    // árbol seco y retorcido del pantano
+    nuevo("t", 90, 104, -13, -40, function (g, X, Y) {
+      var cx = X + 32;
+      g.strokeStyle = "rgb(84,66,58)"; g.lineCap = "round";
+      g.lineWidth = 13; g.beginPath(); g.moveTo(cx - 2, Y + 58); g.quadraticCurveTo(cx - 10, Y + 26, cx + 2, Y - 2); g.stroke();
+      g.lineWidth = 6;
+      [[cx + 2, Y - 2, cx - 22, Y - 22, cx - 34, Y - 12], [cx + 2, Y - 2, cx + 18, Y - 28, cx + 36, Y - 26], [cx - 4, Y + 22, cx + 16, Y + 10, cx + 30, Y + 16], [cx - 6, Y + 14, cx - 20, Y + 4, cx - 30, Y + 10]].forEach(function (r) {
+        g.beginPath(); g.moveTo(r[0], r[1]); g.quadraticCurveTo(r[2], r[3], r[4], r[5]); g.stroke();
+      });
+      g.lineWidth = 3; g.beginPath(); g.moveTo(cx - 22, Y - 22); g.lineTo(cx - 20, Y - 38); g.moveTo(cx + 18, Y - 28); g.lineTo(cx + 26, Y - 42); g.stroke();
+      g.strokeStyle = "rgb(110,90,78)"; g.lineWidth = 3; g.beginPath(); g.moveTo(cx - 6, Y + 52); g.quadraticCurveTo(cx - 10, Y + 28, cx - 2, Y + 6); g.stroke();
+      // musgo colgando
+      g.strokeStyle = "rgba(120,150,96,0.85)"; g.lineWidth = 3;
+      [[cx - 26, Y - 16, 18], [cx + 28, Y - 26, 22], [cx + 22, Y + 12, 14], [cx - 24, Y + 8, 16]].forEach(function (m) {
+        g.beginPath(); g.moveTo(m[0], m[1]); g.lineTo(m[0] + 2, m[1] + m[2]); g.stroke();
+      });
+    });
     // hierba alta por delante de los pies de quien está dentro
     nuevo("g", 64, 30, 0, 38, function (g, X, Y) {
       for (var k = 0; k < 5; k++) {
@@ -300,7 +459,9 @@
     var col = { "T": "rgb(40,110,55)", "P": "rgb(40,110,55)", "R": "rgb(140,144,156)", "B": "rgb(140,144,156)", "b": "rgb(140,144,156)", "U": "rgb(52,128,60)",
       "W": "rgb(84,156,226)", "H": "rgb(160,215,120)", "A": "rgb(90,94,104)", "z": "rgb(90,94,104)", "a": "rgb(200,196,188)", "q": "rgb(226,208,170)",
       "k": "rgb(78,128,190)", "f": "rgb(90,170,80)", "E": "rgb(176,92,70)", "C": "rgb(205,90,66)", "I": "rgb(176,96,70)", "O": "rgb(236,214,150)", "G": "rgb(232,130,110)",
-      "Z": "rgb(210,170,120)", "K": "rgb(200,196,188)", "F": "rgb(226,208,170)", "X": "rgb(196,104,64)", "p": "rgb(90,190,235)", "S": "rgb(222,196,140)", ":": "rgb(222,196,140)", "g": "rgb(80,150,70)", ".": "rgb(120,188,95)" };
+      "Z": "rgb(210,170,120)", "K": "rgb(200,196,188)", "F": "rgb(226,208,170)", "X": "rgb(196,104,64)", "p": "rgb(90,190,235)", "m": "rgb(176,178,182)", "M": "rgb(36,86,140)", "J": "rgb(200,90,60)", "Y": "rgb(150,40,40)", "N": "rgb(140,150,165)",
+      "r": "rgb(230,190,40)", "V": "rgb(190,150,90)", "n": "rgb(96,84,80)", "e": "rgb(230,210,160)", "L": "rgb(240,100,30)", "D": "rgb(60,58,64)", "v": "rgb(110,80,70)",
+      "x": "rgb(200,80,40)", "Q": "rgb(60,140,60)", "s": "rgb(92,120,80)", "o": "rgb(110,84,56)", "w": "rgb(62,96,84)", "d": "rgb(160,120,76)", "t": "rgb(84,66,58)", "c": "rgb(200,60,90)", "S": "rgb(222,196,140)", ":": "rgb(222,196,140)", "g": "rgb(80,150,70)", ".": "rgb(120,188,95)" };
     for (var y = 0; y < MH; y++) for (var x = 0; x < MW; x++) { g.fillStyle = col[c(x, y)]; g.fillRect(6 + x * MS, 6 + y * MS, MS, MS); }
     return L.cv;
   }
@@ -311,7 +472,7 @@
     (ocupadas || []).forEach(function (o) { usadas[o[0] + "," + o[1]] = true; });
     for (var i = 0; i < 3000; i++) {
       var x = Math.floor(Math.random() * MW), y = Math.floor(Math.random() * MH), k = c(x, y);
-      if (k === "S" || esSolido(x, y) || esAgua(x, y) || usadas[x + "," + y]) continue;
+      if (k === "S" || k === "x" || k === "r" || esSolido(x, y) || esAgua(x, y) || usadas[x + "," + y]) continue;   // ni en escaleras ni encima de un peligro
       return [x, y];
     }
     return null;
@@ -334,10 +495,10 @@
   }
 
   window.Mapa = {
-    casillaLibre: casillaLibre, salidaLibre: salidaLibre, usar: usar, actual: function () { return actual; },
-    LISTA: Object.keys(MAPAS).map(function (k) { return { id: k, nombre: MAPAS[k].nombre }; }),
+    casillaLibre: casillaLibre, salidaLibre: salidaLibre, usar: usar, actual: function () { return actual; }, peligros: peligros,
+    LISTA: Object.keys(MAPAS).filter(function (k) { return !MAPAS[k].oculto; }).map(function (k) { return { id: k, nombre: MAPAS[k].nombre }; }),
     T: T, MW: MW, MH: MH, MS: MS, SALIDAS: SALIDAS, celda: c,
-    esSolido: esSolido, esAgua: esAgua, esMeseta: esMeseta, esHierbaAlta: esHierbaAlta,
+    esSolido: esSolido, esAgua: esAgua, esBarro: esBarro, esMeseta: esMeseta, esHierbaAlta: esHierbaAlta,
     puedePisar: puedePisar, frenaAtaque: frenaAtaque,
     pintarSuelo: pintarSuelo, pintarObstaculos: pintarObstaculos, pintarMinimapa: pintarMinimapa,
     azar: azar, elipse: elipse, poli: poli, linea: linea
