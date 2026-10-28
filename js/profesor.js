@@ -112,7 +112,7 @@
       escuchar(base.child("reloj"), "value", function (s2) { partida.reloj = s2.val() || null; });
       escuchar(base.child("calendario"), "value", function (s2) { partida.calendario = s2.val() || []; });
       escuchar(base.child("siguienteEj"), "value", function (s2) { partida.siguienteEj = s2.val() || 0; });
-      escuchar(base.child("ejercicio"), "value", function (s2) { partida.ejercicio = s2.val(); pintarEjercicio(); });
+      escuchar(base.child("ejercicio"), "value", function (s2) { partida.ejercicio = s2.val(); pintar(); });
       escuchar(base.child("respuestas"), "child_added", corregirRespuesta);
       escuchar(base.child("estado"), "value", function (s2) { partida.estado = s2.val(); cambiarEstado(); });
     });
