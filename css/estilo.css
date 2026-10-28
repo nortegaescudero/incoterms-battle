@@ -180,7 +180,7 @@ td.fantasma { color: #cbb8ff; }
 #casEscudo.on { background: var(--verde); color: #fff; }
 #casPotenciador { left: 560px; width: 180px; }
 #casPotenciador.on { background: var(--ambar); color: #fff; }
-#botonPregunta { position: absolute; left: 755px; top: 16px; width: 185px; height: 42px; border: 0; border-radius: 10px; background: var(--azul); color: #fff; font-size: 16px; font-weight: 700; }
+#botonPregunta { position: absolute; left: 755px; top: 16px; width: 185px; height: 42px; border: 0; border-radius: 10px; background: var(--azul); color: #fff; font-size: 15px; font-weight: 700; white-space: nowrap; padding: 0 6px; letter-spacing: -0.2px; }
 #botonPregunta:disabled { background: #343a5c; color: #7880aa; cursor: default; }
 
 /* panel de pregunta */

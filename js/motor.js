@@ -65,6 +65,8 @@
       if (!P) return;
       if (P.ejAbierto) $("panelEjercicio").classList.remove("oculto");
       else if (P.fase) mostrarPanel();
+      else pedirPregunta();
+      this.blur();
     };
     function iconoSonido() {
       var b = $("botonSonido"), mudo = Sonido.mudo();
@@ -283,6 +285,15 @@
     mostrarPanel();
   }
 
+  // El jugador deja de moverse antes de tiempo y pide ya la siguiente pregunta (botón o tecla N).
+  // El tiempo que le quedaba y el ataque sin usar se pierden, igual que cuando se acaba el tiempo.
+  function pedirPregunta() {
+    var j = P.jugador;
+    if (P.fase || P.eliminado || P.ejAbierto || P.pausa || !(j.tiempoHasta > red.ahora())) return;
+    j.tiempoHasta = 0; j.ataque = null; P.teclas = []; P.pulsada = null; guardar();
+    siguientePregunta();
+  }
+
   function responder(i) {
     if (P.fase !== "pregunta") return;
     var pr = P.pregunta, bien = i === pr.correcta, botones = $("opciones").children;
@@ -447,6 +458,7 @@
     }
     if (TECLAS[e.code] && P.teclas.indexOf(TECLAS[e.code]) < 0) { P.teclas.push(TECLAS[e.code]); P.pulsada = TECLAS[e.code]; }
     if (e.code === "Space" && !e.repeat) atacar(red.ahora());
+    if (e.code === "KeyN" && !e.repeat) pedirPregunta();
   }
   function teclaArriba(e) {
     if (!P || !TECLAS[e.code]) return;
@@ -829,8 +841,9 @@
     poner("casEscudo", "class", "casilla" + (j.escudo && !fantasma ? " on" : ""));
     poner("casPotenciador", "class", "casilla" + (j.potenciador && !fantasma ? " on" : ""));
     var ejOculto = P.ejAbierto && $("panelEjercicio").classList.contains("oculto");
-    poner("botonPregunta", "text", P.ejAbierto ? "Ejercicio" : "Pregunta corta");
-    poner("botonPregunta", "disabled", !(ejOculto || (!P.ejAbierto && P.fase && !P.panelVisible)));
+    var pedir = !P.ejAbierto && !P.fase && !P.eliminado && !P.pausa && mueve;   // puede pedir ya la siguiente pregunta
+    poner("botonPregunta", "text", P.ejAbierto ? "Ejercicio" : pedir ? "Siguiente pregunta (N)" : "Pregunta corta");
+    poner("botonPregunta", "disabled", !(ejOculto || pedir || (!P.ejAbierto && P.fase && !P.panelVisible)));
     if (P.ejAbierto) {
       var ejA = P.ejAbierto, puede = puedeSaltar(ejA);
       poner("botonSaltar", "oculto", !puede);
