@@ -5,7 +5,7 @@
   function $(id) { return document.getElementById(id); }
   function mostrar(id) { ["pCrear", "pSala", "pPanel", "pFin"].forEach(function (p) { $(p).classList.toggle("oculto", p !== id); }); }
   function mmss(ms) { var s = Math.max(0, Math.floor(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
-  var LETRAS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", MAX_OBJETOS = 18;
+  var LETRAS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", MAX_OBJETOS = 12;
 
   var banco = Comun.bancoGuardado(), con = null, base = null, codigo = null;
   var partida = {}, jugadores = {}, combate = {}, objetos = {}, escuchas = [], reloj = null, limpieza = null, terminando = false;
@@ -177,7 +177,7 @@
       u["jugadores/" + k + "/x"] = s[0]; u["jugadores/" + k + "/y"] = s[1]; u["jugadores/" + k + "/dir"] = "abajo"; u["jugadores/" + k + "/estado"] = "vivo";
       u["combate/" + k] = { vida: 30, escudo: false };
     });
-    var n = partida.config.objetosIniciales === undefined ? 12 : partida.config.objetosIniciales;
+    var n = partida.config.objetosIniciales === undefined ? 8 : partida.config.objetosIniciales;
     ponerObjetos(u, n, ocupadas);
     u.estado = "jugando"; u.reloj = { inicio: Comun.TS(), pausadoMs: 0, pausaDesde: null };
     base.update(u);
@@ -186,7 +186,7 @@
     var hay = Object.keys(objetos).length;
     for (var i = 0; i < n && hay + i < MAX_OBJETOS; i++) {
       var c = Mapa.casillaLibre(ocupadas); if (!c) break; ocupadas.push(c);
-      u["objetos/" + base.child("objetos").push().key] = { tipo: Sprites.OBJETOS[Math.floor(Math.random() * 5)], x: c[0], y: c[1] };
+      u["objetos/" + base.child("objetos").push().key] = { tipo: Sprites.objetoAlAzar(), x: c[0], y: c[1] };
     }
   }
   $("botonCancelar").onclick = function () {
@@ -236,7 +236,7 @@
       var u = {};
       u.ejercicio = Object.assign({ id: "e" + i, titulo: Comun.nombreEjercicio(c.tipo, c.numero), minimoSaltar: c.minimoSaltar || 0, inicioJuego: tiempoJuego() },
         Comun.ejercicioSinSolucion(c.tipo, ex));
-      ponerObjetos(u, 6, ocupadasMapa());
+      ponerObjetos(u, 4, ocupadasMapa());
       base.update(u);
     });
   }
@@ -320,13 +320,15 @@
     });
     $("vivosPanel").textContent = ids.filter(esVivo).length;
     $("fantasmasPanel").textContent = ids.filter(function (k) { return jugadores[k].estado === "fantasma"; }).length;
-    function ranking(ol, valor) {
+    function ranking(ol, valor, desempate, texto) {
       ol.innerHTML = "";
-      ids.slice().sort(function (a, b) { return valor(b) - valor(a); }).slice(0, 8).forEach(function (k) {
-        var li = document.createElement("li"); li.textContent = jugadores[k].nombre; var b = document.createElement("b"); b.textContent = valor(k); li.appendChild(b); ol.appendChild(li);
+      ids.slice().sort(function (a, b) { return valor(b) - valor(a) || (desempate ? desempate(b) - desempate(a) : 0); }).slice(0, 8).forEach(function (k) {
+        var li = document.createElement("li"); li.textContent = jugadores[k].nombre; var b = document.createElement("b"); b.textContent = texto ? texto(k) : valor(k); li.appendChild(b); ol.appendChild(li);
       });
     }
-    ranking($("rankCombate"), function (k) { return jugadores[k].bajas || 0; });
+    function quitada(k) { return (jugadores[k].vidaQuitada || 0) + (jugadores[k].vidaQuitadaFantasma || 0); }
+    // combate: más bajas y, si empatan, más vida quitada (igual que la clasificación final)
+    ranking($("rankCombate"), function (k) { return jugadores[k].bajas || 0; }, quitada, function (k) { return (jugadores[k].bajas || 0) + " · " + quitada(k) + " v"; });
     ranking($("rankFantasma"), function (k) { return jugadores[k].vidaQuitadaFantasma || 0; });
     pintarEjercicio();
   }
@@ -378,10 +380,10 @@
       var p = r[1].val() || {}, js = p.jugadores || {}, cb = p.combate || {}, cal = p.calendario || [], res = p.resultados || Final.calcular(js, cb, "profesor");
       var ids = Object.keys(js).filter(function (k) { return js[k].nombre && cb[k]; });
       var reyPos = {}; (res.fantasma || []).forEach(function (f, i) { reyPos[f.id] = i + 1; });
-      var hojaClas = [["Posición", "Alumno", "Personaje", "Puntos de combate", "Bajas", "Extra por sobrevivir", "Vida quitada (vivo)", "Vida quitada (fantasma)", "Puesto Rey fantasma", "Estado final"]];
+      var hojaClas = [["Posición", "Alumno", "Personaje", "Bajas", "Vida quitada (total)", "Vida quitada (vivo)", "Vida quitada (fantasma)", "Puesto Rey fantasma", "Estado final"]];
       (res.combate || []).forEach(function (f, i) {
         var j = js[f.id] || {};
-        hojaClas.push([i + 1, f.nombre, (Sprites.PERSONAJES[f.pj] || {}).nombre || f.pj, f.puntos, f.bajas, f.extra, j.vidaQuitada || 0, j.vidaQuitadaFantasma || 0, reyPos[f.id] || "",
+        hojaClas.push([i + 1, f.nombre, (Sprites.PERSONAJES[f.pj] || {}).nombre || f.pj, f.bajas, (j.vidaQuitada || 0) + (j.vidaQuitadaFantasma || 0), j.vidaQuitada || 0, j.vidaQuitadaFantasma || 0, reyPos[f.id] || "",
           j.estado === "fantasma" ? "Fantasma" : (cb[f.id] && cb[f.id].vida > 0 ? "En pie" : "Eliminado")]);
       });
       var cab = ["Alumno", "Aciertos", "Fallos", "% acierto"];

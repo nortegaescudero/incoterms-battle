@@ -5,6 +5,10 @@
   "use strict";
   var T = Mapa.T, VW = 15, VH = 10, ANCHO = VW * T, ALTO = VH * T;
   var PASO_MS = 250, RADIO = 4, VIDA_MAX = 30;
+  var VIDA_CORAZON = 2;          // vida que da el objeto corazón
+  var ATAQUES_PREGUNTA = 3, ATAQUES_EJERCICIO = 5;   // ataques por premio, cada uno contra un jugador distinto
+  var ESPERAS_FALLO = [8000, 12000, 16000];   // espera tras fallar una pregunta corta (sube si se fallan seguidas)
+  var LECTURA_MS = 2000;         // las respuestas no se pueden pulsar hasta pasados 2 s
   // tiempos de movimiento (ms): por acierto, por ejercicio grande, para huir tras quitar vida y del objeto reloj
   var TIEMPO = { pregunta: 30000, ejercicio: 90000, huidaDebil: 30000, huidaFuerte: 45000, reloj: 30000 };
   var VENTAJA = { fuego: "planta", planta: "tierra", tierra: "agua", agua: "fuego" };
@@ -34,7 +38,7 @@
     '<button data-prueba="debil">Darme 30 s + ataque débil</button><button data-prueba="fuerte">Darme 90 s + ataque fuerte</button>' +
     '<button data-prueba="fuerte2">Darme 90 s + ataque fuerte x2 (premio de cálculo)</button><button data-prueba="ejercicio">Lanzar ya el siguiente ejercicio grande</button>' +
     '<button data-prueba="golpe">Recibir un golpe (−5 de vida)</button><button data-prueba="cero">Quedarme sin vida (probar fantasma)</button>' +
-    '<button data-prueba="objetos">Añadir 6 objetos al mapa</button><button data-prueba="menu">Volver a elegir personaje</button>' +
+    '<button data-prueba="objetos">Añadir 4 objetos al mapa</button><button data-prueba="menu">Volver a elegir personaje</button>' +
     '<div class="nota">Los muñecos tienen 30 de vida, se mueven un poco y reaparecen a los 5 s de caer.</div></div></div>';
 
   function $(id) { return document.getElementById(id); }
@@ -119,7 +123,7 @@
     var pr = op.propio || {};
     var j = crearPersonaje(op.id, op.pj, op.nombre, pr.x, pr.y);
     j.dir = pr.dir || "abajo"; j.estado = pr.estado || "vivo";
-    j.tiempoHasta = pr.tiempoHasta || 0; j.ataque = pr.ataque || null; j.potenciador = !!pr.potenciador; j.capaHasta = pr.capaHasta || 0;
+    j.tiempoHasta = pr.tiempoHasta || 0; j.ataque = pr.ataque || null; j.cargas = pr.cargas || 0; j.atacados = pr.atacados ? String(pr.atacados).split(",") : []; j.huidaDada = !!pr.huidaDada; j.potenciador = !!pr.potenciador; j.capaHasta = pr.capaHasta || 0;
     P = { jugador: j, otros: {}, objetos: {}, efectos: [], orden: [], fase: null, pregunta: null, panelVisible: true,
       teclas: [], pulsada: null, cache: {}, guardado: {}, autoSeguir: 0, eliminado: false,
       ej: null, ejAbierto: null, ejCerrado: pr.ejCerrado || null, cal: null, sig: 0, pausa: null };
@@ -154,7 +158,7 @@
 
   // Guarda en la red los datos propios que hacen falta para volver tras recargar.
   function guardar() {
-    var j = P.jugador, d = { tiempoHasta: j.tiempoHasta || 0, ataque: j.ataque || null, potenciador: !!j.potenciador, capaHasta: j.capaHasta || 0, ejCerrado: P.ejCerrado || null },
+    var j = P.jugador, d = { tiempoHasta: j.tiempoHasta || 0, ataque: j.ataque || null, cargas: j.ataque ? j.cargas || 0 : 0, atacados: (j.atacados || []).join(","), huidaDada: !!j.huidaDada, potenciador: !!j.potenciador, capaHasta: j.capaHasta || 0, ejCerrado: P.ejCerrado || null },
       cambios = {}, hay = false;
     Object.keys(d).forEach(function (k) { if (P.guardado[k] !== d[k]) { cambios[k] = d[k]; P.guardado[k] = d[k]; hay = true; } });
     if (hay) red.guardarPropio(cambios);
@@ -252,7 +256,7 @@
     red.recoger(o.id).then(function (mio) {
       if (!mio || !P) return;
       var msg;
-      if (o.tipo === "vida") { red.combatePropio(function (c) { c.vida = Math.min(VIDA_MAX, c.vida + 5); return c; }); msg = "¡Vida +5!"; }
+      if (o.tipo === "vida") { red.combatePropio(function (c) { c.vida = Math.min(VIDA_MAX, c.vida + VIDA_CORAZON); return c; }); msg = "¡Vida +" + VIDA_CORAZON + "!"; }
       else if (o.tipo === "escudo") { red.combatePropio(function (c) { c.escudo = true; return c; }); msg = "¡Escudo puesto! Parará el siguiente ataque"; }
       else if (o.tipo === "potenciador") { j.potenciador = true; msg = "¡Potenciador! Tu siguiente ataque hará x2"; }
       else if (o.tipo === "reloj") { if (j.tiempoHasta > red.ahora()) j.tiempoHasta += TIEMPO.reloj; msg = "¡+" + TIEMPO.reloj / 1000 + " segundos!"; }
@@ -282,6 +286,9 @@
       cont.appendChild(b);
     });
     $("resultado").classList.add("oculto");
+    // las respuestas se pueden pulsar pasados 2 s (para leer la pregunta antes)
+    P.lecturaHasta = red.ahora() + LECTURA_MS;
+    cont.classList.add("leyendo");
     mostrarPanel();
   }
 
@@ -295,7 +302,7 @@
   }
 
   function responder(i) {
-    if (P.fase !== "pregunta") return;
+    if (P.fase !== "pregunta" || red.ahora() < (P.lecturaHasta || 0)) return;
     var pr = P.pregunta, bien = i === pr.correcta, botones = $("opciones").children;
     for (var k = 0; k < botones.length; k++) {
       botones[k].disabled = true;
@@ -303,29 +310,35 @@
       else if (k === i) botones[k].classList.add("fallada");
     }
     P.fase = "resultado"; P.acierto = bien;
+    // fallar cuesta tiempo: 8 s, 12 s, 16 s… si se fallan seguidas (acertar lo deja otra vez en 8 s)
+    P.esperaHasta = bien ? 0 : red.ahora() + ESPERAS_FALLO[Math.min(P.fallosSeguidos || 0, ESPERAS_FALLO.length - 1)];
+    P.fallosSeguidos = bien ? 0 : (P.fallosSeguidos || 0) + 1;
     Sonido.tocar(bien ? "acierto" : "fallo");
     $("resultado").className = bien ? "bien" : "mal";
     $("resultadoTitulo").textContent = bien ? "¡Correcto! +" + TIEMPO.pregunta / 1000 + " s" : "Incorrecto. La respuesta era " + "ABCDEF".charAt(pr.correcta);
     // si acierta: verde un momento y a moverse, sin pulsar nada; si falla: explicación y botón para seguir
     $("resultadoExplicacion").textContent = bien ? "" : pr.q.explicacion;
     $("botonSeguir").classList.toggle("oculto", bien);
-    P.autoSeguir = red.ahora() + (bien ? 1000 : 12000);
+    P.autoSeguir = bien ? red.ahora() + 1000 : P.esperaHasta + 6000;
     red.anotarRespuesta(pr.q.n, bien);
     actualizarBotonSeguir(red.ahora());
   }
   function actualizarBotonSeguir(ahora) {
-    var s = Math.max(0, Math.ceil((P.autoSeguir - ahora) / 1000));
-    var txt = (P.acierto ? "¡A moverme!" : "Siguiente") + " (" + s + ")";
+    var espera = !P.acierto && ahora < (P.esperaHasta || 0);
+    var s = Math.max(0, Math.ceil(((espera ? P.esperaHasta : P.autoSeguir) - ahora) / 1000));
+    var txt = espera ? "Lee la explicación… " + s + " s" : (P.acierto ? "¡A moverme!" : "Siguiente") + " (" + s + ")";
     if ($("botonSeguir").textContent !== txt) $("botonSeguir").textContent = txt;
+    if ($("botonSeguir").disabled !== espera) $("botonSeguir").disabled = espera;
   }
   function seguir() {
     if (!P || P.fase !== "resultado") return;
+    if (!P.acierto && red.ahora() < (P.esperaHasta || 0)) return;
     if (P.acierto) darTiempo(TIEMPO.pregunta, "debil"); else siguientePregunta();
   }
   function darTiempo(ms, ataque) {
     var j = P.jugador;
     j.tiempoHasta = red.ahora() + ms;   // los segundos no se acumulan
-    j.ataque = ataque;
+    j.ataque = ataque; j.cargas = ataque === "debil" ? ATAQUES_PREGUNTA : ATAQUES_EJERCICIO; j.atacados = []; j.huidaDada = false;
     P.fase = null; P.pulsada = null; ocultarPanel(); guardar();
   }
   function mostrarPanel() { P.panelVisible = true; $("panelPregunta").classList.remove("oculto"); }
@@ -366,7 +379,7 @@
     P.ejAbierto = ej;
     $("ejTitulo").textContent = ej.conversion ? "Ejercicio de conversión en fantasma" : "¡Ejercicio para toda la clase! · " + (ej.titulo || "");
     $("ejAviso").textContent = ej.conversion ? "Has quedado eliminado. Resuelve el ejercicio para volver como fantasma (no se puede saltar)."
-      : ej.tipo === "calculo" ? "Haz los cálculos en papel o con calculadora. Premio: " + TIEMPO.ejercicio / 1000 + " s + ataque fuerte x2." : "Premio: " + TIEMPO.ejercicio / 1000 + " s + ataque fuerte.";
+      : ej.tipo === "calculo" ? "Haz los cálculos en papel o con calculadora. Premio: " + TIEMPO.ejercicio / 1000 + " s + " + ATAQUES_EJERCICIO + " ataques fuertes x2." : "Premio: " + TIEMPO.ejercicio / 1000 + " s + " + ATAQUES_EJERCICIO + " ataques fuertes.";
     $("ejEnunciado").innerHTML = formatear(ej.enunciado);
     $("ejFormato").innerHTML = ej.tipo === "teorico" && ej.ejemplo ? "Ejemplo de formato (<b>solo es un ejemplo</b>, no la respuesta): <i>" + Comun.escapar(ej.ejemplo) + "</i>" : "";
     var c = $("ejCampos"); c.innerHTML = "";
@@ -411,7 +424,7 @@
       P.ejCerrado = ej.id;
       cerrarEjercicio();
       darTiempo(TIEMPO.ejercicio, ej.tipo === "calculo" ? "fuerte2" : "fuerte");
-      aviso("¡Correcto! +" + TIEMPO.ejercicio / 1000 + " s y ataque fuerte" + (ej.tipo === "calculo" ? " x2" : ""));
+      aviso("¡Correcto! +" + TIEMPO.ejercicio / 1000 + " s y " + ATAQUES_EJERCICIO + " ataques fuertes" + (ej.tipo === "calculo" ? " x2" : ""));
     });
   }
   function mensajeEj(txt, clase) { $("ejMensaje").textContent = txt; $("ejMensaje").className = clase; }
@@ -437,6 +450,8 @@
       if (j.tiempoHasta) j.tiempoHasta += d;
       if (j.capaHasta > ahora - d) j.capaHasta += d;
       if (P.autoSeguir) P.autoSeguir += d;
+      if (P.esperaHasta) P.esperaHasta += d;
+      if (P.lecturaHasta) P.lecturaHasta += d;
       cartel(null); guardar();
       if (!P.fase && !P.ejAbierto && !P.eliminado && !(j.tiempoHasta > ahora)) siguientePregunta();
     }
@@ -504,6 +519,7 @@
         j.tiempoHasta = 0; j.ataque = null; guardar();
         if (!P.eliminado && !P.ejAbierto) { aviso("Se acabó el tiempo"); Sonido.tocar("tiempoFin"); siguientePregunta(); }
       }
+      if (P.fase === "pregunta" && P.lecturaHasta && ahora >= P.lecturaHasta) { P.lecturaHasta = 0; $("opciones").classList.remove("leyendo"); }
       if (P.fase === "resultado") {
         actualizarBotonSeguir(ahora);
         if (ahora >= P.autoSeguir) seguir();
@@ -566,7 +582,6 @@
     var j = P.jugador;
     if (!j.ataque || !puedeMoverse(j, ahora)) return;
     var tipo = j.ataque, alcance = tipo === "debil" ? 1 : 4, d = DIRS[j.dir];
-    j.ataque = null; j.expr = "ataque"; j.exprHasta = ahora + 500;
     var x = j.x, y = j.y, objetivo = null, largo = 0;
     for (var k = 1; k <= alcance; k++) {
       var nx = x + d[0], ny = y + d[1];
@@ -576,6 +591,15 @@
       objetivo = Object.values(P.otros).find(function (o) { return estaVivo(o) && o.x === x && o.y === y; });
       if (objetivo) break;
     }
+    // cada ataque del premio tiene que ir contra un jugador distinto
+    if (objetivo && (j.atacados || []).indexOf(objetivo.id) >= 0) {
+      if (ahora > (P.avisoRepetido || 0)) { P.avisoRepetido = ahora + 1500; aviso("Ya has atacado a " + objetivo.nombre + ". Busca a otro jugador"); }
+      return;
+    }
+    j.cargas = Math.max(0, (j.cargas || 1) - 1);
+    if (objetivo) j.atacados = (j.atacados || []).concat([objetivo.id]);
+    if (!j.cargas) j.ataque = null;
+    j.expr = "ataque"; j.exprHasta = ahora + 500;
     var pp = posPx(j, ahora), cx = pp.x + 32, o;
     if (j.dir === "derecha") o = [cx + 22, pp.y + 14]; else if (j.dir === "izquierda") o = [cx - 22, pp.y + 14];
     else if (j.dir === "abajo") o = [cx, pp.y + 40]; else o = [cx, pp.y - 6];
@@ -605,7 +629,8 @@
       Sonido.tocar(r.bloqueado ? "bloqueado" : r.real > 0 ? "golpe" : "tiempoFin");
       if (r.real > 0) {
         var s = {}; s[fantasma ? "vidaQuitadaFantasma" : "vidaQuitada"] = r.real; red.sumar(s);
-        if (at.tiempoHasta > red.ahora()) {
+        if (at.tiempoHasta > red.ahora() && !at.huidaDada) {
+          at.huidaDada = true;
           var extra = tipo === "debil" ? TIEMPO.huidaDebil : TIEMPO.huidaFuerte;
           at.tiempoHasta += extra; guardar();
           aviso("¡Le has quitado vida! +" + extra / 1000 + " s para huir");
@@ -835,7 +860,7 @@
         : (escondido ? "Escondido" : "Quieto") + " · responde para moverte";
     poner("estadoTexto", "text", txt);
     var nombres = fantasma ? { debil: "Susto", fuerte: "Embrujo", fuerte2: "Embrujo x2" } : { debil: "Ataque débil", fuerte: "Ataque fuerte", fuerte2: "Ataque fuerte x2" };
-    var at = mueve && j.ataque ? nombres[j.ataque] + " listo · Espacio" : (mueve ? "Sin ataque" : "");
+    var at = mueve && j.ataque ? nombres[j.ataque] + " · quedan " + (j.cargas || 1) + " · Espacio" : (mueve ? "Sin ataques" : "");
     poner("estadoAtaque", "text", at);
     poner("estadoAtaque", "class", mueve && j.ataque ? "listo" : "");
     poner("casEscudo", "class", "casilla" + (j.escudo && !fantasma ? " on" : ""));

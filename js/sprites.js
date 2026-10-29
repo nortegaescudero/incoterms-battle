@@ -68,5 +68,8 @@
     g.restore();
   }
 
-  window.Sprites = { cargar: cargar, personaje: personaje, icono: icono, efecto: efecto, img: img, PERSONAJES: PERSONAJES, OBJETOS: OBJETOS, TAM: TAM };
+  // Objeto al azar: el corazón sale 1 de cada 10 veces; los otros cuatro se reparten el resto por igual.
+  function objetoAlAzar() { return Math.random() < 0.1 ? "vida" : OBJETOS[1 + Math.floor(Math.random() * 4)]; }
+
+  window.Sprites = { cargar: cargar, objetoAlAzar: objetoAlAzar, personaje: personaje, icono: icono, efecto: efecto, img: img, PERSONAJES: PERSONAJES, OBJETOS: OBJETOS, TAM: TAM };
 })();

@@ -1,7 +1,6 @@
 // Puntuación y pantalla final: «Clasificación de combate» y «Rey fantasma».
 (function () {
   "use strict";
-  var EXTRAS = [3, 2, 1];
   function plural(n, s, p) { return n + " " + (n === 1 ? s : p); }
   function ordinal(i) { return (i + 1) + ".º"; }
 
@@ -13,16 +12,17 @@
         fantasma: fantasma, vivo: !fantasma && c.vida > 0, vida: Math.max(0, c.vida || 0), cayo: j.horaEliminado || 0 };
     });
     filas.forEach(function (f) { f.total = f.vq + f.vqf; });
-    // orden de supervivencia: primero los que siguen en pie (más vida, y si empatan, más vida quitada);
+    // orden de supervivencia (solo para desempatar al final): primero los que siguen en pie, con más vida;
     // después los eliminados, del último en caer al primero
     var vivos = filas.filter(function (f) { return f.vivo; }).sort(function (a, b) { return b.vida - a.vida || b.total - a.total; });
     var caidos = filas.filter(function (f) { return !f.vivo; }).sort(function (a, b) { return b.cayo - a.cayo; });
-    vivos.concat(caidos).forEach(function (f, i) { f.sup = i; f.extra = EXTRAS[i] || 0; f.puntos = f.bajas + f.extra; });
+    vivos.concat(caidos).forEach(function (f, i) { f.sup = i; });
 
-    var combateLista = filas.slice().sort(function (a, b) { return b.puntos - a.puntos || b.total - a.total || a.sup - b.sup; }).map(function (f) {
-      return { id: f.id, nombre: f.nombre, pj: f.pj, puntos: f.puntos, bajas: f.bajas, extra: f.extra,
-        texto: plural(f.bajas, "baja", "bajas") + (f.extra ? " + " + f.extra + " extra" : "") + (f.vivo ? " · en pie" : " · eliminado"),
-        corto: plural(f.bajas, "baja", "bajas") + " + " + f.extra + " extra" };
+    // clasificación de combate: 1.º más bajas; 2.º si empatan, más vida quitada a otros jugadores (vivo y fantasma)
+    var combateLista = filas.slice().sort(function (a, b) { return b.bajas - a.bajas || b.total - a.total || a.sup - b.sup; }).map(function (f) {
+      return { id: f.id, nombre: f.nombre, pj: f.pj, puntos: f.bajas, bajas: f.bajas, total: f.total,
+        texto: plural(f.bajas, "baja", "bajas") + " · " + f.total + " de vida quitada" + (f.vivo ? " · en pie" : " · eliminado"),
+        corto: plural(f.bajas, "baja", "bajas") + " · " + f.total + " de vida quitada" };
     });
     var fantasmaLista = filas.slice().sort(function (a, b) { return b.vqf - a.vqf || b.total - a.total || a.sup - b.sup; }).map(function (f) {
       return { id: f.id, nombre: f.nombre, pj: f.pj, puntos: f.vqf, fantasma: f.fantasma,
@@ -52,8 +52,8 @@
       c.appendChild(retrato(fantasma ? "fantasma" : f.pj, i === 0 ? 110 : 90));
       var b = el("div", "podio-bloque");
       b.appendChild(el("div", "podio-nombre", f.nombre));
-      b.appendChild(el("div", "podio-puntos", "★ " + f.puntos));
-      b.appendChild(el("div", "podio-detalle", fantasma ? "de vida quitada" : f.corto));
+      b.appendChild(el("div", "podio-puntos", fantasma ? "★ " + f.puntos : "★ " + plural(f.puntos, "baja", "bajas")));
+      b.appendChild(el("div", "podio-detalle", fantasma ? "de vida quitada" : f.total + " de vida quitada"));
       c.appendChild(b); c.appendChild(el("div", "podio-pos", ordinal(i)));
       podio.appendChild(c);
     });
@@ -65,7 +65,7 @@
       fila.appendChild(retrato(fantasma ? "fantasma" : f.pj, 34));
       var n = el("span", "nom"); n.appendChild(el("b", null, (f.id === miId ? "Tú · " : "") + f.nombre)); n.appendChild(el("small", null, f.texto));
       fila.appendChild(n);
-      fila.appendChild(el("span", "pts", (fantasma ? "" : "★ ") + f.puntos));
+      fila.appendChild(el("span", "pts", fantasma ? String(f.puntos) : "★ " + f.puntos));
       ul.appendChild(fila);
     });
     p.appendChild(ul);
@@ -78,7 +78,7 @@
     cont.appendChild(el("h1", "final-titulo", "¡Fin de la partida!"));
     cont.appendChild(el("p", "final-subtitulo", r.subtitulo));
     var dos = el("div", "final-dos");
-    dos.appendChild(panel("Clasificación de combate", "Bajas + extras por sobrevivir (3 · 2 · 1)", r.combate, miId, false, "Empate: gana quien más vida haya quitado en total"));
+    dos.appendChild(panel("Clasificación de combate", "Gana quien más bajas haya hecho", r.combate, miId, false, "Empate: gana quien más vida haya quitado a otros jugadores"));
     dos.appendChild(panel("Rey fantasma", "Vida quitada a los vivos siendo fantasma", r.fantasma, miId, true, "Solo cuenta la vida quitada a jugadores vivos · un fantasma no puede dar el golpe final"));
     cont.appendChild(dos);
     var firma = el("div", "firma"), logo = el("img"); logo.src = "img/logo_nico.png?v=13"; logo.alt = "Logo de Nico";

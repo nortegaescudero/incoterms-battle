@@ -23,7 +23,7 @@
         m.ponerOtro(mu.id, mu);
         m.ponerCombate(mu.id, combate[mu.id]);
       });
-      self.anadirObjetos(12);
+      self.anadirObjetos(8);
       temporizador = setInterval(pasear, 200);
     };
     this.detener = function () { clearInterval(temporizador); };
@@ -52,10 +52,10 @@
     }
     this.anadirObjetos = function (n) {
       var tipos = Sprites.OBJETOS;
-      for (var i = 0; i < n && Object.keys(objetos).length < 18; i++) {
+      for (var i = 0; i < n && Object.keys(objetos).length < 12; i++) {
         var c = Mapa.casillaLibre(m.ocupadas()); if (!c) break;
         var id = "o" + (++idObj);
-        objetos[id] = { tipo: tipos[Math.floor(Math.random() * tipos.length)], x: c[0], y: c[1] };
+        objetos[id] = { tipo: Sprites.objetoAlAzar(), x: c[0], y: c[1] };
         m.ponerObjeto(id, objetos[id]);
       }
     };
@@ -149,7 +149,7 @@
         if (!ex) continue;
         lanzados[id] = { tipo: c.tipo, ex: ex };
         Motor.ejercicio(Object.assign({ id: id, titulo: Comun.nombreEjercicio(c.tipo, c.numero), minimoSaltar: c.minimoSaltar, inicioJuego: tiempo() }, Comun.ejercicioSinSolucion(c.tipo, ex)));
-        red.anadirObjetos(6);
+        red.anadirObjetos(4);
         break;
       }
       Motor.calendario(cal, sig);
@@ -158,7 +158,7 @@
       id: "yo", pj: pjElegido, nombre: "Tú", banco: banco, pruebas: true, propio: { x: pos.yo[0], y: pos.yo[1] },
       conversion: conv ? Comun.ejercicioSinSolucion("calculo", conv) : null,
       tiempoJuego: tiempo,
-      alPrueba: function (que) { if (que === "ejercicio") lanzar(); else if (que === "objetos") red.anadirObjetos(6); },
+      alPrueba: function (que) { if (que === "ejercicio") lanzar(); else if (que === "objetos") red.anadirObjetos(4); },
       alSalir: function () { clearInterval(reloj); $("menu").classList.remove("oculto"); }
     }, red);
     Motor.calendario(cal, sig);

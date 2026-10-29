@@ -193,6 +193,8 @@ td.fantasma { color: #cbb8ff; }
 .opcion b { flex: 0 0 26px; height: 26px; border-radius: 50%; background: #dfe6f7; color: #3a64b0; text-align: center; line-height: 26px; font-size: 14px; }
 .opcion:hover:not(:disabled) { border-color: var(--azul); background: #eef5ff; }
 .opcion:disabled { cursor: default; }
+#opciones.leyendo .opcion { opacity: 0.45; cursor: wait; }
+#botonSeguir:disabled { opacity: 0.6; cursor: wait; }
 .opcion.correcta { border-color: var(--verde); background: #e6f6ea; }
 .opcion.correcta b { background: var(--verde); color: #fff; }
 .opcion.fallada { border-color: var(--rojo); background: #fdecee; }
